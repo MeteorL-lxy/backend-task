@@ -70,6 +70,10 @@ export function useHomeScreen() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editForm, setEditForm] = useState<TaskEditorForm>(defaultEditForm);
   const [isEditSaving, setIsEditSaving] = useState(false);
+  // 筛选条件：全部 / 进行中 / 已完成
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "completed">("all");
+  // 排序方式
+  const [sortBy, setSortBy] = useState<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">("createdAtDesc");
 
   // 已完成任务数量（记忆化，避免每次渲染都重新计算）
   const completedCount = useMemo(
@@ -80,6 +84,43 @@ export function useHomeScreen() {
   // 任务完成百分比（0-100）
   const taskProgress =
     tasks.length === 0 ? 0 : Math.round((completedCount / tasks.length) * 100);
+
+  // 根据筛选和排序条件计算最终展示的任务列表
+  const filteredTasks = useMemo(() => {
+    let result = [...tasks];
+
+    // 按状态筛选
+    if (filterStatus === "active") {
+      result = result.filter((t) => !t.is_done);
+    } else if (filterStatus === "completed") {
+      result = result.filter((t) => t.is_done);
+    }
+
+    // 排序
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "createdAtAsc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "dueDateAsc": {
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        }
+        case "dueDateDesc": {
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(b.due_date).getTime() - new Date(a.due_date).getTime();
+        }
+        case "createdAtDesc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+    return result;
+  }, [tasks, filterStatus, sortBy]);
 
   // 展示名称优先级：档案昵称 > 认证元数据昵称 > 邮箱前缀
   const displayName =
@@ -339,5 +380,10 @@ export function useHomeScreen() {
     openEditor,
     closeEditor,
     submitEdit,
+    filterStatus,
+    setFilterStatus,
+    sortBy,
+    setSortBy,
+    filteredTasks,
   };
 }

@@ -13,11 +13,15 @@ type TaskBoardProps = {
   onToggle: (task: Task) => void; // 切换任务完成状态
   onDelete: (taskId: string) => void; // 删除任务
   onEdit: (task: Task) => void; // 打开编辑弹窗
+  filterStatus: "all" | "active" | "completed"; // 当前筛选条件
+  onFilterChange: (status: "all" | "active" | "completed") => void; // 筛选变更
+  sortBy: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc"; // 当前排序
+  onSortChange: (sort: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc") => void; // 排序变更
 };
 
 /**
  * 任务看板组件
- * 顶部展示统计信息，下方以卡片形式列出所有任务
+ * 顶部展示统计信息和筛选栏，下方以卡片形式列出所有任务
  */
 export function TaskBoard({
   tasks,
@@ -27,6 +31,10 @@ export function TaskBoard({
   onToggle,
   onDelete,
   onEdit,
+  filterStatus,
+  onFilterChange,
+  sortBy,
+  onSortChange,
 }: TaskBoardProps) {
   return (
     <div className="rounded-[30px] border border-[#dbe0d4] bg-white/90 p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)]">
@@ -42,13 +50,49 @@ export function TaskBoard({
             {completedCount}/{tasks.length} 已完成
           </p>
         </div>
-        <button
-          className="rounded-full border border-[#cfd5cc] px-4 py-2 text-sm font-medium text-[#344238] transition hover:bg-[#f3f5ef]"
-          onClick={onRefresh}
-          type="button"
-        >
-          刷新
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 状态筛选 */}
+          <div className="flex rounded-full border border-[#d9ddd4] bg-[#f7f5ef] p-1">
+            {([
+              { key: "all", label: "全部" },
+              { key: "active", label: "进行中" },
+              { key: "completed", label: "已完成" },
+            ] as const).map((item) => (
+              <button
+                key={item.key}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                  filterStatus === item.key
+                    ? "bg-[#1b4332] text-white"
+                    : "text-[#657064] hover:text-[#1b4332]"
+                }`}
+                onClick={() => onFilterChange(item.key)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {/* 排序方式 */}
+          <select
+            className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-3 py-1.5 text-sm font-medium text-[#344238] outline-none transition focus:border-[#1b4332]"
+            onChange={(event) =>
+              onSortChange(event.target.value as TaskBoardProps["sortBy"])
+            }
+            value={sortBy}
+          >
+            <option value="createdAtDesc">最新创建</option>
+            <option value="createdAtAsc">最早创建</option>
+            <option value="dueDateAsc">最近截止</option>
+            <option value="dueDateDesc">最晚截止</option>
+          </select>
+          <button
+            className="rounded-full border border-[#cfd5cc] px-4 py-2 text-sm font-medium text-[#344238] transition hover:bg-[#f3f5ef]"
+            onClick={onRefresh}
+            type="button"
+          >
+            刷新
+          </button>
+        </div>
       </div>
 
       {/* 加载中且无数据时 */}

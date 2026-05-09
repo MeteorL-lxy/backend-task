@@ -115,12 +115,16 @@ export function HomeScreen() {
 
             <TaskBoard
               completedCount={workspace.completedCount}
+              filterStatus={workspace.filterStatus}
               isTaskLoading={workspace.isTaskLoading}
               onDelete={(taskId) => void workspace.deleteTask(taskId)}
               onEdit={(task) => workspace.openEditor(task)}
+              onFilterChange={workspace.setFilterStatus}
               onRefresh={() => void workspace.reloadTasks()}
+              onSortChange={workspace.setSortBy}
               onToggle={(task) => void workspace.toggleTask(task)}
-              tasks={workspace.tasks}
+              sortBy={workspace.sortBy}
+              tasks={workspace.filteredTasks}
             />
 
             {/* 任务编辑弹窗 */}
