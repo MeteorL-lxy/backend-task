@@ -44,27 +44,27 @@ export function TaskEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f1a14]/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="w-full max-w-md rounded-[30px] border border-[#dbe0d4] bg-white/95 p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur sm:p-7"
+        className="w-full max-w-md rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
               编辑任务
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#17211b]">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text-primary">
               修改内容
             </h2>
           </div>
           <button
-            className="rounded-full p-2 text-[#7b877c] transition hover:bg-[#f3f5ef]"
+            className="rounded-full p-2 text-text-muted transition hover:bg-surface"
             onClick={onClose}
             type="button"
             aria-label="关闭"
@@ -82,39 +82,39 @@ export function TaskEditor({
         </div>
 
         <form className="mt-6 flex flex-col gap-4" onSubmit={onSubmit}>
-          <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+          <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             标题
             <input
-              className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
               maxLength={120}
               onChange={(event) => onChange("title", event.target.value)}
               placeholder="任务标题"
               required
               value={form.title}
             />
-            <span className="self-end text-xs text-[#8a968a]">
+            <span className="self-end text-xs text-text-muted">
               {form.title.length}/120
             </span>
           </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+          <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             描述
             <textarea
-              className="min-h-24 rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              className="min-h-24 rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
               maxLength={500}
               onChange={(event) => onChange("description", event.target.value)}
               placeholder="可选，最多 500 字"
               value={form.description}
             />
-            <span className="self-end text-xs text-[#8a968a]">
+            <span className="self-end text-xs text-text-muted">
               {form.description.length}/500
             </span>
           </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+          <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             截止日期
             <input
-              className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
               min={new Date().toISOString().split("T")[0]}
               onChange={(event) => onChange("dueDate", event.target.value)}
               type="date"
@@ -124,14 +124,14 @@ export function TaskEditor({
 
           <div className="mt-2 flex gap-3">
             <button
-              className="flex-1 rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3.5 font-medium text-[#2c342d] transition hover:bg-[#eef2ea]"
+              className="flex-1 rounded-[18px] border border-border bg-surface px-4 py-3.5 font-medium text-text-primary transition hover:bg-surface-raised"
               onClick={onClose}
               type="button"
             >
               取消
             </button>
             <button
-              className="flex-1 rounded-[18px] bg-[#1b4332] px-4 py-3.5 font-medium text-white transition hover:bg-[#163629] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1 rounded-[18px] bg-accent px-4 py-3.5 font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSaving || !form.title.trim()}
               type="submit"
             >

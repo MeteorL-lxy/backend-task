@@ -59,7 +59,7 @@ function KanbanCard({
 
   return (
     <div
-      className="cursor-grab rounded-[18px] border border-[#e4e7df] bg-[linear-gradient(180deg,_#fffef9,_#fbfaf5)] p-4 shadow-sm transition hover:border-[#cfd9cf] active:cursor-grabbing"
+      className="cursor-grab rounded-[18px] border border-border bg-surface-raised p-4 shadow-sm transition hover:border-border active:cursor-grabbing"
       ref={setNodeRef}
       style={style}
       {...attributes}
@@ -69,24 +69,24 @@ function KanbanCard({
         <div className="min-w-0 flex-1">
           <h3
             className={`text-base font-medium ${
-              task.status === "done" ? "text-[#738073] line-through" : "text-[#1f2921]"
+              task.status === "done" ? "text-text-muted line-through" : "text-text-primary"
             }`}
           >
             {task.title}
           </h3>
           {task.description ? (
-            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#586356]">
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-text-secondary">
               {task.description}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[#7c866f]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
             <span
               className={`rounded-full px-3 py-1 ${TASK_STATUS_META[task.status].colorClass}`}
             >
               {TASK_STATUS_META[task.status].label}
             </span>
             {task.due_date ? (
-              <span className="rounded-full bg-[#f4eadb] px-3 py-1 text-[#94653a]">
+              <span className="whitespace-nowrap rounded-full px-3 py-1 due-date-tag">
                 截止 {task.due_date}
               </span>
             ) : null}
@@ -94,7 +94,7 @@ function KanbanCard({
         </div>
         <div className="flex flex-col gap-1.5">
           <button
-            className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-3 py-1.5 text-xs font-medium text-[#344238] transition hover:bg-white"
+            className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised"
             onClick={(event) => {
               event.stopPropagation();
               onEdit(task);
@@ -104,7 +104,7 @@ function KanbanCard({
             编辑
           </button>
           <button
-            className="rounded-full border border-[#e0d5d0] px-3 py-1.5 text-xs font-medium text-[#8a2f25] transition hover:bg-[#fff0ee]"
+            className="rounded-full border border-red-900/10 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-500/10 dark:border-red-400/20 dark:text-red-400"
             onClick={(event) => {
               event.stopPropagation();
               onDelete(task.id);
@@ -145,15 +145,15 @@ function KanbanColumn({
   // 列头颜色
   const headerColor =
     status === "done"
-      ? "bg-[#eef2ea] text-[#4a6b50]"
+      ? "column-header-done"
       : status === "in_progress"
-        ? "bg-[#e8f0fc] text-[#4a6fa5]"
-        : "bg-[#f4eadb] text-[#94653a]";
+        ? "column-header-in-progress"
+        : "column-header-todo";
 
   return (
     <div
-      className={`flex flex-col rounded-[24px] border border-[#e4e7df] bg-[#fafaf6] p-4 transition ${
-        isOver ? "border-[#1b4332] ring-1 ring-[#1b4332]/20" : ""
+      className={`flex flex-col rounded-[24px] border border-border bg-surface p-4 transition ${
+        isOver ? "border-accent ring-1 ring-accent/20" : ""
       }`}
       ref={setNodeRef}
     >
@@ -163,7 +163,7 @@ function KanbanColumn({
         >
           {title}
         </span>
-        <span className="text-sm font-medium text-[#7b877c]">
+        <span className="text-sm font-medium text-text-muted">
           {columnTasks.length}
         </span>
       </div>
@@ -182,7 +182,7 @@ function KanbanColumn({
           ))}
         </SortableContext>
         {columnTasks.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-[#d4d9cf] py-6 text-center text-sm text-[#9da899]">
+          <div className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-border py-6 text-center text-sm text-text-muted">
             拖拽任务到此处
           </div>
         ) : null}

@@ -31,23 +31,23 @@ export function AuthCard({
 }: AuthCardProps) {
   return (
     <section className="flex min-h-[70vh] items-center justify-center">
-      <div className="w-full max-w-md rounded-[32px] border border-[#dbe0d4] bg-white/92 p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur sm:p-7">
+      <div className="w-full max-w-md rounded-[32px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
               账号
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#17211b]">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text-primary">
               {authMode === "sign-in" ? "登录" : "注册"}
             </h2>
           </div>
-          <div className="rounded-full border border-[#dde2d8] bg-[#f6f7f3] p-1">
+          <div className="rounded-full border border-border bg-surface p-1">
             <div className="flex gap-1">
               <button
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   authMode === "sign-in"
-                    ? "bg-[#17211b] text-white"
-                    : "text-[#657064]"
+                    ? "bg-text-primary text-white"
+                    : "text-text-muted"
                 }`}
                 onClick={() => onAuthModeChange("sign-in")}
                 type="button"
@@ -57,8 +57,8 @@ export function AuthCard({
               <button
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   authMode === "sign-up"
-                    ? "bg-[#17211b] text-white"
-                    : "text-[#657064]"
+                    ? "bg-text-primary text-white"
+                    : "text-text-muted"
                 }`}
                 onClick={() => onAuthModeChange("sign-up")}
                 type="button"
@@ -71,25 +71,25 @@ export function AuthCard({
 
         <form className="mt-8 flex flex-col gap-4" onSubmit={onSubmit}>
           {authMode === "sign-up" ? (
-            <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+            <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
               昵称
               <input
-                className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+                className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
                 maxLength={30}
                 onChange={(event) => onChange("nickname", event.target.value)}
                 placeholder="给自己起个名字"
                 value={authForm.nickname}
               />
-              <span className="self-end text-xs text-[#8a968a]">
+              <span className="self-end text-xs text-text-muted">
                 {authForm.nickname.length}/30
               </span>
             </label>
           ) : null}
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+          <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             邮箱
             <input
-              className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
               onChange={(event) => onChange("email", event.target.value)}
               placeholder="请输入邮箱地址"
               required
@@ -97,10 +97,10 @@ export function AuthCard({
               value={authForm.email}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
+          <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             密码
             <input
-              className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
               minLength={6}
               onChange={(event) => onChange("password", event.target.value)}
               placeholder="至少 6 位"
@@ -111,7 +111,7 @@ export function AuthCard({
           </label>
 
           <button
-            className="mt-2 rounded-[18px] bg-[#1b4332] px-4 py-3.5 font-medium text-white transition hover:bg-[#163629] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 rounded-[18px] bg-accent px-4 py-3.5 font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isAuthLoading || !configReady}
             type="submit"
           >

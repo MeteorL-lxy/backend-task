@@ -50,13 +50,13 @@ export function HomeScreen() {
   // 认证配置存在但状态尚未恢复：展示加载占位
   if (configReady && !workspace.isAuthReady) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.92),_rgba(247,244,236,0.95)_35%,_rgba(228,238,232,0.85)_72%,_rgba(236,230,218,0.95)_100%)] px-4 py-6 text-[#1d241f] sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-background px-4 py-6 text-text-primary transition-colors sm:px-6 lg:px-8">
         <div className="mx-auto flex min-h-[70vh] w-full max-w-6xl items-center justify-center">
-          <div className="w-full max-w-md rounded-[32px] border border-[#dbe0d4] bg-white/92 p-6 text-center shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur sm:p-7">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">
+          <div className="w-full max-w-md rounded-[32px] border border-border bg-surface-raised p-6 text-center shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
               账号
             </p>
-            <p className="mt-4 text-base text-[#4d584d]">正在恢复登录状态...</p>
+            <p className="mt-4 text-base text-text-secondary">正在恢复登录状态...</p>
           </div>
         </div>
       </main>
@@ -118,13 +118,13 @@ export function HomeScreen() {
             <div className="flex flex-col gap-4">
               {/* 视图切换 */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#7b877c]">视图</span>
-                <div className="flex rounded-full border border-[#d9ddd4] bg-[#f7f5ef] p-1">
+                <span className="text-sm font-medium text-text-muted">视图</span>
+                <div className="flex rounded-full border border-border bg-surface p-1">
                   <button
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                       workspace.viewMode === "list"
-                        ? "bg-[#1b4332] text-white"
-                        : "text-[#657064] hover:text-[#1b4332]"
+                        ? "bg-accent text-white"
+                        : "text-text-muted hover:text-accent"
                     }`}
                     onClick={() => workspace.setViewMode("list")}
                     type="button"
@@ -134,8 +134,8 @@ export function HomeScreen() {
                   <button
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                       workspace.viewMode === "kanban"
-                        ? "bg-[#1b4332] text-white"
-                        : "text-[#657064] hover:text-[#1b4332]"
+                        ? "bg-accent text-white"
+                        : "text-text-muted hover:text-accent"
                     }`}
                     onClick={() => workspace.setViewMode("kanban")}
                     type="button"

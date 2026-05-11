@@ -39,21 +39,21 @@ export function TaskBoard({
 }: TaskBoardProps) {
   return (
     <div className="rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)] dark:shadow-[0_26px_80px_-54px_rgba(0,0,0,0.5)]">
-      <div className="mb-6 flex flex-col gap-4 border-b border-[#e4e7df] pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
             任务概览
           </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#17211b]">
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">
             我的任务
           </h2>
-          <p className="mt-2 text-sm text-[#677367]">
+          <p className="mt-2 text-sm text-text-muted">
             {completedCount}/{tasks.length} 已完成
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* 状态筛选 */}
-          <div className="flex rounded-full border border-[#d9ddd4] bg-[#f7f5ef] p-1">
+          <div className="flex rounded-full border border-border bg-surface p-1">
             {([
               { key: "all", label: "全部" },
               { key: "active", label: "进行中" },
@@ -63,8 +63,8 @@ export function TaskBoard({
                 key={item.key}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                   filterStatus === item.key
-                    ? "bg-[#1b4332] text-white"
-                    : "text-[#657064] hover:text-[#1b4332]"
+                    ? "bg-accent text-white"
+                    : "text-text-muted hover:text-accent"
                 }`}
                 onClick={() => onFilterChange(item.key)}
                 type="button"
@@ -75,7 +75,7 @@ export function TaskBoard({
           </div>
           {/* 排序方式 */}
           <select
-            className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-3 py-1.5 text-sm font-medium text-[#344238] outline-none transition focus:border-[#1b4332]"
+            className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary outline-none transition focus:border-accent"
             onChange={(event) =>
               onSortChange(event.target.value as TaskBoardProps["sortBy"])
             }
@@ -87,7 +87,7 @@ export function TaskBoard({
             <option value="dueDateDesc">最晚截止</option>
           </select>
           <button
-            className="rounded-full border border-[#cfd5cc] px-4 py-2 text-sm font-medium text-[#344238] transition hover:bg-[#f3f5ef]"
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface"
             onClick={onRefresh}
             type="button"
           >
@@ -101,17 +101,17 @@ export function TaskBoard({
         <div className="grid gap-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
-              className="rounded-[24px] border border-[#e4e7df] bg-[#fbfaf5] p-5"
+              className="rounded-[24px] border border-border bg-surface p-5"
               key={index}
             >
               <div className="flex items-start gap-3">
-                <div className="h-3 w-3 animate-pulse rounded-full bg-[#d8d8d0]" />
+                <div className="h-3 w-3 animate-pulse rounded-full bg-border" />
                 <div className="flex-1 space-y-3">
-                  <div className="h-5 w-1/3 animate-pulse rounded-full bg-[#e4e4dc]" />
-                  <div className="h-4 w-2/3 animate-pulse rounded-full bg-[#e4e4dc]" />
+                  <div className="h-5 w-1/3 animate-pulse rounded-full bg-border" />
+                  <div className="h-4 w-2/3 animate-pulse rounded-full bg-border" />
                   <div className="flex gap-2">
-                    <div className="h-6 w-16 animate-pulse rounded-full bg-[#e4e4dc]" />
-                    <div className="h-6 w-20 animate-pulse rounded-full bg-[#e4e4dc]" />
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-border" />
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-border" />
                   </div>
                 </div>
               </div>
@@ -122,9 +122,9 @@ export function TaskBoard({
 
       {/* 空状态 */}
       {!isTaskLoading && tasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[#d4d9cf] bg-[#fbfaf5] p-10 text-center">
+        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-border bg-surface p-10 text-center">
           <svg
-            className="h-12 w-12 text-[#a8b2a0]"
+            className="h-12 w-12 text-text-muted"
             fill="none"
             stroke="currentColor"
             strokeWidth={1.5}
@@ -136,10 +136,10 @@ export function TaskBoard({
               strokeLinejoin="round"
             />
           </svg>
-          <p className="mt-4 text-base font-medium text-[#586356]">
+          <p className="mt-4 text-base font-medium text-text-secondary">
             还没有任务
           </p>
-          <p className="mt-1 text-sm text-[#7b877c]">
+          <p className="mt-1 text-sm text-text-muted">
             在左侧新建一个，开始安排今天的事项
           </p>
         </div>
@@ -149,7 +149,7 @@ export function TaskBoard({
       <div className="grid gap-4">
         {tasks.map((task) => (
           <article
-            className="rounded-[24px] border border-[#e4e7df] bg-[linear-gradient(180deg,_#fffef9,_#fbfaf5)] p-5 transition hover:border-[#cfd9cf]"
+            className="rounded-[24px] border border-border bg-surface-raised p-5 transition hover:border-border"
             key={task.id}
           >
             <div className="flex items-start justify-between gap-4">
@@ -161,30 +161,30 @@ export function TaskBoard({
                 <div className="flex items-center gap-3">
                   <span
                     className={`h-3 w-3 rounded-full ${
-                      task.is_done ? "bg-[#6f8d79]" : "bg-[#d8b367]"
+                      TASK_STATUS_META[task.status].dotClass
                     }`}
                   />
                   <h3
                     className={`text-lg font-medium ${
-                      task.is_done ? "text-[#738073] line-through" : "text-[#1f2921]"
+                      task.is_done ? "text-text-muted line-through" : "text-text-primary"
                     }`}
                   >
                     {task.title}
                   </h3>
                 </div>
                 {task.description ? (
-                  <p className="mt-3 text-sm leading-6 text-[#586356]">
+                  <p className="mt-3 text-sm leading-6 text-text-secondary">
                     {task.description}
                   </p>
                 ) : null}
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[#7c866f]">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
                   <span
                     className={`rounded-full px-3 py-1 ${TASK_STATUS_META[task.status].colorClass}`}
                   >
                     {TASK_STATUS_META[task.status].label}
                   </span>
                   {task.due_date ? (
-                    <span className="rounded-full bg-[#f4eadb] px-3 py-1 text-[#94653a]">
+                    <span className="whitespace-nowrap rounded-full px-3 py-1 due-date-tag">
                       截止 {task.due_date}
                     </span>
                   ) : null}
@@ -192,14 +192,14 @@ export function TaskBoard({
               </button>
               <div className="flex flex-col gap-2">
                 <button
-                  className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-4 py-2 text-sm font-medium text-[#344238] transition hover:bg-white"
+                  className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-raised"
                   onClick={() => onEdit(task)}
                   type="button"
                 >
                   编辑
                 </button>
                 <button
-                  className="rounded-full border border-[#e0d5d0] px-4 py-2 text-sm font-medium text-[#8a2f25] transition hover:bg-[#fff0ee]"
+                  className="rounded-full border border-red-900/10 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-500/10 dark:border-red-400/20 dark:text-red-400"
                   onClick={() => onDelete(task.id)}
                   type="button"
                 >

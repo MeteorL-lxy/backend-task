@@ -1,6 +1,27 @@
 @import "tailwindcss";
 
 :root {
+  /* 状态标签颜色（浅色） */
+  --status-todo-bg: #f4eadb;
+  --status-todo-text: #94653a;
+  --status-in-progress-bg: #e8f0fc;
+  --status-in-progress-text: #4a6fa5;
+  --status-done-bg: #eef2ea;
+  --status-done-text: #4a6b50;
+  --status-dot-todo: #d8b367;
+  --status-dot-in-progress: #4a6fa5;
+  --status-dot-done: #6f8d79;
+  --due-date-bg: #f4eadb;
+  --due-date-text: #94653a;
+
+  /* 列头颜色（浅色） */
+  --column-header-todo-bg: #f4eadb;
+  --column-header-todo-text: #94653a;
+  --column-header-in-progress-bg: #e8f0fc;
+  --column-header-in-progress-text: #4a6fa5;
+  --column-header-done-bg: #eef2ea;
+  --column-header-done-text: #4a6b50;
+
   --background: #ffffff;
   --foreground: #171717;
   --surface: #f7f5ef;
@@ -24,6 +45,27 @@
   --text-muted: #5e7166;
   --accent: #3d8f6e;
   --accent-hover: #4aa87f;
+
+  /* 状态标签颜色（深色） */
+  --status-todo-bg: #4a3a20;
+  --status-todo-text: #d8b367;
+  --status-in-progress-bg: #1e2f4a;
+  --status-in-progress-text: #7aa0d8;
+  --status-done-bg: #2a3a2e;
+  --status-done-text: #8ab896;
+  --status-dot-todo: #e8c87a;
+  --status-dot-in-progress: #7aa0d8;
+  --status-dot-done: #8ab896;
+  --due-date-bg: #4a3a20;
+  --due-date-text: #d8b367;
+
+  /* 列头颜色（深色） */
+  --column-header-todo-bg: #4a3a20;
+  --column-header-todo-text: #d8b367;
+  --column-header-in-progress-bg: #1e2f4a;
+  --column-header-in-progress-text: #7aa0d8;
+  --column-header-done-bg: #2a3a2e;
+  --column-header-done-text: #8ab896;
 }
 
 @theme inline {
@@ -40,6 +82,18 @@
   --font-sans: Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
+
+/* 状态标签（浅色 + 深色通过 CSS 变量切换） */
+.status-tag-todo { background-color: var(--status-todo-bg); color: var(--status-todo-text); }
+.status-tag-in-progress { background-color: var(--status-in-progress-bg); color: var(--status-in-progress-text); }
+.status-tag-done { background-color: var(--status-done-bg); color: var(--status-done-text); }
+.status-dot-todo { background-color: var(--status-dot-todo); }
+.status-dot-in-progress { background-color: var(--status-dot-in-progress); }
+.status-dot-done { background-color: var(--status-dot-done); }
+.due-date-tag { background-color: var(--due-date-bg); color: var(--due-date-text); }
+.column-header-todo { background-color: var(--column-header-todo-bg); color: var(--column-header-todo-text); }
+.column-header-in-progress { background-color: var(--column-header-in-progress-bg); color: var(--column-header-in-progress-text); }
+.column-header-done { background-color: var(--column-header-done-bg); color: var(--column-header-done-text); }
 
 body {
   background: var(--background);

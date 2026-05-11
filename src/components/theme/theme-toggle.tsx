@@ -23,7 +23,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="h-9 w-9 rounded-full border border-[#d9ddd4] bg-[#f7f5ef]"
+        className="h-9 w-9 rounded-full border border-border bg-surface"
         type="button"
       />
     );
@@ -52,7 +52,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-text-secondary transition hover:bg-surface-raised hover:text-text-primary dark:border-[#2a3832] dark:bg-[#1a2420] dark:text-[#9aaa9e] dark:hover:bg-[#1f2c26] dark:hover:text-[#e8ece9]"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-text-secondary transition hover:bg-surface-raised hover:text-text-primary dark:bg-surface dark:text-text-secondary dark:hover:bg-surface-raised dark:hover:text-text-primary"
       onClick={cycle}
       title={`当前主题：${theme === "dark" ? "深色" : theme === "light" ? "浅色" : "系统"}`}
       type="button"

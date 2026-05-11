@@ -27,17 +27,17 @@ export type TaskFormState = {
 export const TASK_STATUS_META = {
   todo: {
     label: "待办",
-    colorClass: "bg-[#f4eadb] text-[#94653a]",
-    dotClass: "bg-[#d8b367]",
+    colorClass: "status-tag-todo",
+    dotClass: "status-dot-todo",
   },
   in_progress: {
     label: "进行中",
-    colorClass: "bg-[#e8f0fc] text-[#4a6fa5]",
-    dotClass: "bg-[#4a6fa5]",
+    colorClass: "status-tag-in-progress",
+    dotClass: "status-dot-in-progress",
   },
   done: {
     label: "已完成",
-    colorClass: "bg-[#eef2ea] text-[#4a6b50]",
-    dotClass: "bg-[#6f8d79]",
+    colorClass: "status-tag-done",
+    dotClass: "status-dot-done",
   },
 } as const;

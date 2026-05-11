@@ -23,19 +23,19 @@ export function ProfilePanel({
   taskProgress,
 }: ProfilePanelProps) {
   return (
-    <div className="rounded-[30px] border border-[#dbe0d4] bg-white/90 p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)]">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">
+    <div className="rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)] dark:shadow-[0_26px_80px_-54px_rgba(0,0,0,0.5)]">
+      <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
         账号信息
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e6efe9] text-xl font-semibold text-[#1b4332]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface text-xl font-semibold text-accent">
           {(displayName ?? "U").slice(0, 1).toUpperCase()}
         </div>
         <div>
-          <p className="text-xl font-semibold text-[#17211b]">
+          <p className="text-xl font-semibold text-text-primary">
             {displayName ?? "新用户"}
           </p>
-          <p className="text-sm text-[#677367]">{userEmail}</p>
+          <p className="text-sm text-text-muted">{userEmail}</p>
         </div>
       </div>
       <div className="mt-5 grid gap-3">
@@ -49,9 +49,9 @@ export function ProfilePanel({
 
 function MetricRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-[18px] bg-[#f6f7f3] px-4 py-3 text-sm">
-      <span className="text-[#6d786d]">{label}</span>
-      <span className="font-medium text-[#243126]">{value}</span>
+    <div className="flex items-center justify-between rounded-[18px] bg-surface px-4 py-3 text-sm">
+      <span className="text-text-secondary">{label}</span>
+      <span className="font-medium text-text-primary">{value}</span>
     </div>
   );
 }

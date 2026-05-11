@@ -207,20 +207,20 @@ export function CommandPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-[#0f1a14]/40 p-4 pt-[15vh] backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 p-4 pt-[15vh] backdrop-blur-sm"
       onClick={() => setIsOpen(false)}
       role="presentation"
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-[24px] border border-[#dbe0d4] bg-white/95 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur"
+        className="w-full max-w-lg overflow-hidden rounded-[24px] border border-border bg-surface-raised shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)]"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {/* 搜索框 */}
-        <div className="flex items-center gap-3 border-b border-[#e4e7df] px-5 py-4">
+        <div className="flex items-center gap-3 border-b border-border px-5 py-4">
           <svg
-            className="h-5 w-5 text-[#9da899]"
+            className="h-5 w-5 text-text-muted"
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
@@ -233,14 +233,14 @@ export function CommandPanel({
             />
           </svg>
           <input
-            className="flex-1 bg-transparent text-base text-[#1f2921] outline-none placeholder:text-[#9da899]"
+            className="flex-1 bg-transparent text-base text-text-primary outline-none placeholder:text-text-muted"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索任务或执行命令..."
             ref={inputRef}
             type="text"
             value={query}
           />
-          <kbd className="rounded-md border border-[#d4d9cf] bg-[#f7f5ef] px-2 py-1 text-xs font-medium text-[#7b877c]">
+          <kbd className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-text-muted">
             ESC
           </kbd>
         </div>
@@ -248,18 +248,18 @@ export function CommandPanel({
         {/* 结果列表 */}
         <div className="max-h-[50vh] overflow-y-auto p-2">
           {allItems.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-[#9da899]">
+            <div className="px-4 py-8 text-center text-sm text-text-muted">
               {query.trim() ? "未找到匹配的任务" : "输入关键词搜索任务"}
             </div>
           ) : (
             <div className="flex flex-col gap-1">
               {/* 分组标题 */}
               {query.trim() ? (
-                <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9da899]">
+                <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">
                   任务 ({results.length})
                 </div>
               ) : (
-                <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9da899]">
+                <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">
                   快捷命令
                 </div>
               )}
@@ -272,8 +272,8 @@ export function CommandPanel({
                   <button
                     className={`flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-left transition ${
                       isSelected
-                        ? "bg-[#1b4332] text-white"
-                        : "text-[#1f2921] hover:bg-[#f3f5ef]"
+                        ? "bg-accent text-white"
+                        : "text-text-primary hover:bg-surface"
                     }`}
                     key={item.id}
                     onClick={() => {
@@ -288,17 +288,13 @@ export function CommandPanel({
                     type="button"
                   >
                     {isCommand ? (
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#f3f5ef] text-lg">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-surface text-lg">
                         {(item as typeof commands[0]).icon}
                       </span>
                     ) : (
                       <span
                         className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                          (item as typeof results[0]).task.status === "done"
-                            ? "bg-[#6f8d79]"
-                            : (item as typeof results[0]).task.status === "in_progress"
-                              ? "bg-[#4a6fa5]"
-                              : "bg-[#d8b367]"
+                          TASK_STATUS_META[(item as typeof results[0]).task.status].dotClass
                         }`}
                       />
                     )}
@@ -306,7 +302,7 @@ export function CommandPanel({
                       <p className="truncate text-sm font-medium">{item.title}</p>
                       <p
                         className={`truncate text-xs ${
-                          isSelected ? "text-white/70" : "text-[#7b877c]"
+                          isSelected ? "text-white/70" : "text-text-muted"
                         }`}
                       >
                         {item.subtitle}
@@ -315,7 +311,7 @@ export function CommandPanel({
                     {isCommand ? (
                       <span
                         className={`shrink-0 text-xs ${
-                          isSelected ? "text-white/60" : "text-[#9da899]"
+                          isSelected ? "text-white/60" : "text-text-muted"
                         }`}
                       >
                         命令
@@ -329,21 +325,21 @@ export function CommandPanel({
         </div>
 
         {/* 底部提示 */}
-        <div className="flex items-center gap-4 border-t border-[#e4e7df] px-5 py-2.5 text-xs text-[#9da899]">
+        <div className="flex items-center gap-4 border-t border-border px-5 py-2.5 text-xs text-text-muted">
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-[#d4d9cf] bg-[#f7f5ef] px-1.5 py-0.5 font-medium">
+            <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-medium">
               ↵
             </kbd>
             执行
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-[#d4d9cf] bg-[#f7f5ef] px-1.5 py-0.5 font-medium">
+            <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-medium">
               ↑↓
             </kbd>
             选择
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-[#d4d9cf] bg-[#f7f5ef] px-1.5 py-0.5 font-medium">
+            <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-medium">
               esc
             </kbd>
             关闭
