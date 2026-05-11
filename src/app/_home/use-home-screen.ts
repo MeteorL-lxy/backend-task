@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthSession } from "@/app/auth-provider";
 import type { Profile, Task } from "@/types/database";
 import {
@@ -22,6 +22,7 @@ import {
   updateTaskStatus,
   updateTaskStatusById,
 } from "@/api/tasks";
+import { getSupabaseClient, hasSupabaseConfig } from "@/api/supabase/client";
 import type {
   AuthFormState,
   AuthMode,
@@ -77,6 +78,8 @@ export function useHomeScreen() {
   const [sortBy, setSortBy] = useState<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">("createdAtDesc");
   // 视图模式：列表 / 看板
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  // 保存 Realtime 频道引用，用于组件卸载时取消订阅
+  const realtimeChannelRef = useRef<ReturnType<ReturnType<typeof getSupabaseClient>["channel"]> | null>(null);
 
   // 已完成任务数量（记忆化，避免每次渲染都重新计算）
   const completedCount = useMemo(
@@ -179,6 +182,80 @@ export function useHomeScreen() {
 
     return () => {
       isActive = false;
+    };
+  }, [user]);
+
+  /**
+   * Supabase Realtime 订阅
+   * 监听当前用户的 tasks 表变更，自动同步到本地状态
+   * 支持多标签页实时感知其他标签页的改动
+   */
+  useEffect(() => {
+    if (!user || !hasSupabaseConfig()) {
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+
+    // 取消旧的订阅（防止重复）
+    if (realtimeChannelRef.current) {
+      void supabase.removeChannel(realtimeChannelRef.current);
+    }
+
+    const channel = supabase
+      .channel(`tasks:user:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tasks",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newTask = payload.new as Task;
+          // 避免当前标签页自己触发的写操作重复追加（乐观更新已处理）
+          setTasks((prev) => {
+            if (prev.some((t) => t.id === newTask.id)) return prev;
+            return [newTask, ...prev];
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tasks",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedTask = payload.new as Task;
+          setTasks((prev) =>
+            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "tasks",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id;
+          setTasks((prev) => prev.filter((t) => t.id !== deletedId));
+        },
+      )
+      .subscribe();
+
+    realtimeChannelRef.current = channel;
+
+    return () => {
+      void supabase.removeChannel(channel);
+      realtimeChannelRef.current = null;
     };
   }, [user]);
 
