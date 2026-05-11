@@ -38,7 +38,7 @@ export function TaskBoard({
   onSortChange,
 }: TaskBoardProps) {
   return (
-    <div className="rounded-[30px] border border-[#dbe0d4] bg-white/90 p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)]">
+    <div className="rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)] dark:shadow-[0_26px_80px_-54px_rgba(0,0,0,0.5)]">
       <div className="mb-6 flex flex-col gap-4 border-b border-[#e4e7df] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#7b877c]">

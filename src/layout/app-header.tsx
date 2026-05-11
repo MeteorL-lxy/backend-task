@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 type WorkspaceHeaderProps = {
   displayName: string | null;     // 展示用的用户昵称
@@ -50,8 +51,9 @@ export function WorkspaceHeader({
             {displayName ? `${displayName} · ` : ""}
             {userEmail}
           </div>
+          <ThemeToggle />
           <button
-            className="rounded-full bg-[#1b4332] px-5 py-2.5 font-medium text-white transition hover:bg-[#163629]"
+            className="rounded-full bg-accent px-5 py-2.5 font-medium text-white transition hover:bg-accent-hover"
             onClick={onSignOut}
             type="button"
           >
@@ -59,8 +61,11 @@ export function WorkspaceHeader({
           </button>
         </div>
       ) : (
-        <div className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-4 py-2 text-sm text-[#5f6c61]">
-          安全访问
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <div className="rounded-full border border-[#d9ddd4] bg-[#f7f5ef] px-4 py-2 text-sm text-[#5f6c61] dark:border-[#2a3832] dark:bg-[#1a2420] dark:text-[#9aaa9e]">
+            安全访问
+          </div>
         </div>
       )}
     </header>

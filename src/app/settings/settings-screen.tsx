@@ -52,7 +52,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.92),_rgba(247,244,236,0.95)_35%,_rgba(228,238,232,0.85)_72%,_rgba(236,230,218,0.95)_100%)] px-4 py-6 text-[#1d241f] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-6 text-text-primary transition-colors sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <WorkspaceHeader
           currentPath="/settings"

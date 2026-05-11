@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import type { User } from "@supabase/supabase-js";
 import { AuthProvider } from "@/app/auth-provider";
 import { getServerSupabaseClient } from "@/api/supabase/server";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -40,9 +41,11 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="zh-CN" className="h-full antialiased">
+    <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        <AuthProvider initialUser={initialUser}>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider initialUser={initialUser}>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
