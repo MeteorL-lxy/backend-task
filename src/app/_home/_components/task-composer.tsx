@@ -4,7 +4,9 @@
  */
 
 import type { FormEvent } from "react";
+import { motion } from "framer-motion";
 import type { TaskFormState } from "@/types/workspace";
+import { slideInRightVariants } from "@/lib/animations";
 
 type TaskComposerProps = {
   form: TaskFormState;         // 表单当前值
@@ -24,9 +26,12 @@ export function TaskComposer({
   onSubmit,
 }: TaskComposerProps) {
   return (
-    <form
+    <motion.form
+      animate="visible"
       className="rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)] dark:shadow-[0_26px_80px_-54px_rgba(0,0,0,0.5)]"
+      initial="hidden"
       onSubmit={onSubmit}
+      variants={slideInRightVariants}
     >
       <div className="flex items-center justify-between gap-3">
         <div>
@@ -84,6 +89,6 @@ export function TaskComposer({
           {isTaskLoading ? "保存中..." : "保存任务"}
         </button>
       </div>
-    </form>
+    </motion.form>
   );
 }

@@ -4,7 +4,9 @@
  */
 
 import type { FormEvent } from "react";
+import { motion } from "framer-motion";
 import type { AuthFormState, AuthMode } from "@/types/workspace";
+import { modalVariants, overlayVariants } from "@/lib/animations";
 
 type AuthCardProps = {
   authForm: AuthFormState;      // 表单当前值
@@ -30,8 +32,18 @@ export function AuthCard({
   configReady,
 }: AuthCardProps) {
   return (
-    <section className="flex min-h-[70vh] items-center justify-center">
-      <div className="w-full max-w-md rounded-[32px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7">
+    <motion.section
+      animate="visible"
+      className="flex min-h-[70vh] items-center justify-center"
+      initial="hidden"
+      variants={overlayVariants}
+    >
+      <motion.div
+        animate="visible"
+        className="w-full max-w-md rounded-[32px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.28)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7"
+        initial="hidden"
+        variants={modalVariants}
+      >
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
@@ -122,7 +134,7 @@ export function AuthCard({
                 : "创建账号"}
           </button>
         </form>
-      </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 }

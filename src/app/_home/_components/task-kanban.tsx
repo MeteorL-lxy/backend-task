@@ -6,6 +6,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   DndContext,
   type DragEndEvent,
@@ -19,6 +20,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import type { Task } from "@/types/database";
 import { TASK_STATUS_META } from "@/types/workspace";
+import { kanbanCardVariants, kanbanColumnVariants } from "@/lib/animations";
 
 type TaskKanbanProps = {
   tasks: Task[];               // 任务列表
@@ -58,10 +60,14 @@ function KanbanCard({
   };
 
   return (
-    <div
+    <motion.div
       className="cursor-grab rounded-[18px] border border-border bg-surface-raised p-4 shadow-sm transition hover:border-border active:cursor-grabbing"
+      initial={{ opacity: 0, y: 20, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
       ref={setNodeRef}
       style={style}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       {...attributes}
       {...listeners}
     >
@@ -115,7 +121,7 @@ function KanbanCard({
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -167,26 +173,37 @@ function KanbanColumn({
           {columnTasks.length}
         </span>
       </div>
-      <div className="flex min-h-[200px] flex-col gap-3">
+      <motion.div
+        animate="visible"
+        className="flex min-h-[200px] flex-col gap-3"
+        initial="hidden"
+        variants={kanbanColumnVariants}
+      >
         <SortableContext
           items={columnTasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
           {columnTasks.map((task) => (
-            <KanbanCard
-              key={task.id}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              task={task}
-            />
+            <motion.div key={task.id} variants={kanbanCardVariants}>
+              <KanbanCard
+                onDelete={onDelete}
+                onEdit={onEdit}
+                task={task}
+              />
+            </motion.div>
           ))}
         </SortableContext>
         {columnTasks.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-border py-6 text-center text-sm text-text-muted">
+          <motion.div
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-border py-6 text-center text-sm text-text-muted"
+            initial={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
             拖拽任务到此处
-          </div>
+          </motion.div>
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 }

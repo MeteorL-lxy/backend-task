@@ -6,9 +6,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { Task } from "@/types/database";
 import { TASK_STATUS_META } from "@/types/workspace";
+import { modalVariants, overlayVariants, quickTransition } from "@/lib/animations";
 
 type CommandPanelProps = {
   tasks?: Task[];                                // 当前用户的任务列表（可选，未传则不显示搜索）
@@ -203,20 +205,28 @@ export function CommandPanel({
     setSelectedIndex(0);
   }, [allItems.length]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 p-4 pt-[15vh] backdrop-blur-sm"
-      onClick={() => setIsOpen(false)}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-lg overflow-hidden rounded-[24px] border border-border bg-surface-raised shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)]"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          animate="visible"
+          className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 p-4 pt-[15vh] backdrop-blur-sm"
+          exit="exit"
+          initial="hidden"
+          onClick={() => setIsOpen(false)}
+          role="presentation"
+          variants={overlayVariants}
+        >
+          <motion.div
+            animate="visible"
+            className="w-full max-w-lg overflow-hidden rounded-[24px] border border-border bg-surface-raised shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)]"
+            exit="exit"
+            initial="hidden"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            variants={modalVariants}
+          >
         {/* 搜索框 */}
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">
           <svg
@@ -345,8 +355,10 @@ export function CommandPanel({
             关闭
           </span>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

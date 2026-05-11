@@ -6,7 +6,9 @@
 "use client";
 
 import type { FormEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Task } from "@/types/database";
+import { modalVariants, overlayVariants } from "@/lib/animations";
 
 /** 编辑表单的数据结构 */
 export type TaskEditorForm = {
@@ -38,22 +40,28 @@ export function TaskEditor({
   onSubmit,
   onClose,
 }: TaskEditorProps) {
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-md rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          animate="visible"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          exit="exit"
+          initial="hidden"
+          onClick={onClose}
+          role="presentation"
+          variants={overlayVariants}
+        >
+          <motion.div
+            animate="visible"
+            className="w-full max-w-md rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_30px_80px_-48px_rgba(28,45,36,0.32)] backdrop-blur dark:shadow-[0_30px_80px_-48px_rgba(0,0,0,0.5)] sm:p-7"
+            exit="exit"
+            initial="hidden"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            variants={modalVariants}
+          >
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-text-muted">
@@ -139,7 +147,9 @@ export function TaskEditor({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -3,8 +3,10 @@
  * 展示当前用户的所有任务，支持切换状态、编辑和删除
  */
 
+import { motion } from "framer-motion";
 import type { Task } from "@/types/database";
 import { TASK_STATUS_META } from "@/types/workspace";
+import { emptyStateVariants } from "@/lib/animations";
 
 type TaskBoardProps = {
   tasks: Task[];               // 任务列表
@@ -122,7 +124,12 @@ export function TaskBoard({
 
       {/* 空状态 */}
       {!isTaskLoading && tasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-border bg-surface p-10 text-center">
+        <motion.div
+          animate="visible"
+          className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-border bg-surface p-10 text-center"
+          initial="hidden"
+          variants={emptyStateVariants}
+        >
           <svg
             className="h-12 w-12 text-text-muted"
             fill="none"
@@ -142,15 +149,22 @@ export function TaskBoard({
           <p className="mt-1 text-sm text-text-muted">
             在左侧新建一个，开始安排今天的事项
           </p>
-        </div>
+        </motion.div>
       ) : null}
 
       {/* 任务卡片列表 */}
-      <div className="grid gap-4">
-        {tasks.map((task) => (
-          <article
-            className="rounded-[24px] border border-border bg-surface-raised p-5 transition hover:border-border"
+      <div className="grid gap-4" key={`${filterStatus}-${sortBy}`}>
+        {tasks.map((task, index) => (
+          <motion.article
+            className="rounded-[24px] border border-border bg-surface-raised p-5 hover:border-border"
             key={task.id}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.3,
+              ease: [0.16, 1, 0.3, 1],
+              delay: Math.min(index * 0.04, 0.4),
+            }}
           >
             <div className="flex items-start justify-between gap-4">
               <button
@@ -207,7 +221,7 @@ export function TaskBoard({
                 </button>
               </div>
             </div>
-          </article>
+          </motion.article>
         ))}
       </div>
     </div>

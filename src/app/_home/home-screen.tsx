@@ -18,6 +18,8 @@ import { CommandPanel } from "@/components/common/command-panel";
 import { ConfigWarning } from "@/components/common/config-warning";
 import { StatusBanner } from "@/components/common/status-banner";
 import { WorkspaceHeader } from "@/layout/app-header";
+import { motion } from "framer-motion";
+import { fadeInVariants } from "@/lib/animations";
 
 // 提前检查 Supabase 配置是否就绪（模块级常量，避免每次渲染都判断）
 const configReady = hasSupabaseConfig();
@@ -145,28 +147,36 @@ export function HomeScreen() {
                 </div>
               </div>
 
-              {workspace.viewMode === "list" ? (
-                <TaskBoard
-                  completedCount={workspace.completedCount}
-                  filterStatus={workspace.filterStatus}
-                  isTaskLoading={workspace.isTaskLoading}
-                  onDelete={(taskId) => void workspace.deleteTask(taskId)}
-                  onEdit={(task) => workspace.openEditor(task)}
-                  onFilterChange={workspace.setFilterStatus}
-                  onRefresh={() => void workspace.reloadTasks()}
-                  onSortChange={workspace.setSortBy}
-                  onToggle={(task) => void workspace.toggleTask(task)}
-                  sortBy={workspace.sortBy}
-                  tasks={workspace.filteredTasks}
-                />
-              ) : (
-                <TaskKanban
-                  onDelete={(taskId) => void workspace.deleteTask(taskId)}
-                  onDrop={(taskId, newStatus) => void workspace.handleKanbanDrop(taskId, newStatus)}
-                  onEdit={(task) => workspace.openEditor(task)}
-                  tasks={workspace.filteredTasks}
-                />
-              )}
+              <motion.div
+                animate="visible"
+                className="contents"
+                initial="hidden"
+                key={workspace.viewMode}
+                variants={fadeInVariants}
+              >
+                {workspace.viewMode === "list" ? (
+                  <TaskBoard
+                    completedCount={workspace.completedCount}
+                    filterStatus={workspace.filterStatus}
+                    isTaskLoading={workspace.isTaskLoading}
+                    onDelete={(taskId) => void workspace.deleteTask(taskId)}
+                    onEdit={(task) => workspace.openEditor(task)}
+                    onFilterChange={workspace.setFilterStatus}
+                    onRefresh={() => void workspace.reloadTasks()}
+                    onSortChange={workspace.setSortBy}
+                    onToggle={(task) => void workspace.toggleTask(task)}
+                    sortBy={workspace.sortBy}
+                    tasks={workspace.filteredTasks}
+                  />
+                ) : (
+                  <TaskKanban
+                    onDelete={(taskId) => void workspace.deleteTask(taskId)}
+                    onDrop={(taskId, newStatus) => void workspace.handleKanbanDrop(taskId, newStatus)}
+                    onEdit={(task) => workspace.openEditor(task)}
+                    tasks={workspace.filteredTasks}
+                  />
+                )}
+              </motion.div>
             </div>
 
             {/* 全局命令面板（Cmd+K） */}
