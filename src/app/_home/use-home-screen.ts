@@ -1,36 +1,23 @@
 /**
- * 首页（工作台）的业务逻辑 Hook
- * 管理认证、任务、个人档案的全部状态与副作用
+ * 首页（工作台）聚合 Hook
+ * 组合三个子 Hook（状态消息、任务管理、任务编辑器）
+ * 并保留认证与档案初始化逻辑
  */
 
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthSession } from "@/app/auth-provider";
-import type { Profile, Task } from "@/types/database";
-import {
-  signIn,
-  signOut,
-  signUp,
-} from "@/api/auth";
+import type { Profile } from "@/types/database";
+import type { AuthFormState, AuthMode } from "@/types/workspace";
+import { signIn, signOut, signUp } from "@/api/auth";
 import { ensureProfile, fetchProfile } from "@/api/profile";
-import {
-  createTask,
-  fetchTasks,
-  removeTask,
-  updateTask,
-  updateTaskStatus,
-  updateTaskStatusById,
-} from "@/api/tasks";
-import { getSupabaseClient, hasSupabaseConfig } from "@/api/supabase/client";
-import type {
-  AuthFormState,
-  AuthMode,
-  MessageTone,
-  TaskFormState,
-} from "@/types/workspace";
-import type { TaskEditorForm } from "@/app/_home/_components/task-editor";
 import { getErrorMessage, readNicknameFromUser } from "@/utils/workspace";
+import { useStatusMessage } from "@/app/_home/_hooks/use-status-message";
+import { useTasks } from "@/app/_home/_hooks/use-tasks";
+import { useTaskEditor } from "@/app/_home/_hooks/use-task-editor";
+import { validateForm, hasErrors, type FieldErrors } from "@/lib/validation";
+import { authSignInSchema, authSignUpSchema } from "@/lib/form-schemas";
 
 /** 认证表单默认值 */
 const defaultAuthForm: AuthFormState = {
@@ -39,102 +26,40 @@ const defaultAuthForm: AuthFormState = {
   nickname: "",
 };
 
-/** 任务创建表单默认值 */
-const defaultTaskForm: TaskFormState = {
-  title: "",
-  description: "",
-  dueDate: "",
-};
-
-/** 任务编辑表单默认值 */
-const defaultEditForm: TaskEditorForm = {
-  title: "",
-  description: "",
-  dueDate: "",
-};
-
 /**
- * 首页状态管理 Hook
+ * 首页状态管理 Hook（聚合层）
+ * 组合子 Hook 并补充认证与档案逻辑，返回值与重构前完全一致
  * @returns 首页所需的全部状态与操作方法
  */
 export function useHomeScreen() {
   const { isAuthReady, user } = useAuthSession();
+
+  // ── 认证状态 ──
   const [authMode, setAuthMode] = useState<AuthMode>("sign-in");
   const [authForm, setAuthForm] = useState<AuthFormState>(defaultAuthForm);
-  const [taskForm, setTaskForm] = useState<TaskFormState>(defaultTaskForm);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [message, setMessage] = useState("");
-  const [messageTone, setMessageTone] = useState<MessageTone>("neutral");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [authErrors, setAuthErrors] = useState<FieldErrors<"email" | "password" | "nickname">>({});
+
+  // ── 档案状态 ──
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [editForm, setEditForm] = useState<TaskEditorForm>(defaultEditForm);
-  const [isEditSaving, setIsEditSaving] = useState(false);
-  // 筛选条件：全部 / 进行中 / 已完成
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "completed">("all");
-  // 排序方式
-  const [sortBy, setSortBy] = useState<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">("createdAtDesc");
-  // 视图模式：列表 / 看板
-  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
-  // 保存 Realtime 频道引用，用于组件卸载时取消订阅
-  const realtimeChannelRef = useRef<ReturnType<ReturnType<typeof getSupabaseClient>["channel"]> | null>(null);
 
-  // 已完成任务数量（记忆化，避免每次渲染都重新计算）
-  const completedCount = useMemo(
-    () => tasks.filter((task) => task.is_done).length,
-    [tasks],
-  );
-
-  // 任务完成百分比（0-100）
-  const taskProgress =
-    tasks.length === 0 ? 0 : Math.round((completedCount / tasks.length) * 100);
-
-  // 根据筛选和排序条件计算最终展示的任务列表
-  const filteredTasks = useMemo(() => {
-    let result = [...tasks];
-
-    // 按状态筛选
-    if (filterStatus === "active") {
-      result = result.filter((t) => !t.is_done);
-    } else if (filterStatus === "completed") {
-      result = result.filter((t) => t.is_done);
-    }
-
-    // 排序
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "createdAtAsc":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case "dueDateAsc": {
-          if (!a.due_date && !b.due_date) return 0;
-          if (!a.due_date) return 1;
-          if (!b.due_date) return -1;
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-        }
-        case "dueDateDesc": {
-          if (!a.due_date && !b.due_date) return 0;
-          if (!a.due_date) return 1;
-          if (!b.due_date) return -1;
-          return new Date(b.due_date).getTime() - new Date(a.due_date).getTime();
-        }
-        case "createdAtDesc":
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
-
-    return result;
-  }, [tasks, filterStatus, sortBy]);
+  // ── 子 Hook 组合 ──
+  const statusMessage = useStatusMessage();
+  const tasksHook = useTasks({ user, message: statusMessage });
+  const editorHook = useTaskEditor({
+    tasks: tasksHook.tasks,
+    setTasks: tasksHook.setTasks,
+    message: statusMessage,
+  });
 
   // 展示名称优先级：档案昵称 > 认证元数据昵称 > 邮箱前缀
   const displayName =
     profile?.nickname || readNicknameFromUser(user) || user?.email?.split("@")[0] || null;
 
   /**
-   * 用户登录后初始化数据
-   * 自动创建/同步用户档案，并加载任务列表
+   * 用户登录后初始化档案
+   * 自动创建/同步用户档案，任务加载由 useTasks 内部 Effect 独立处理
    */
   useEffect(() => {
     if (!user) {
@@ -144,140 +69,47 @@ export function useHomeScreen() {
     const currentUser = user;
     let isActive = true; // 用于防止组件卸载后仍然设置状态
 
-    async function bootstrap() {
+    async function bootstrapProfile() {
       setIsProfileLoading(true);
-      setMessage("");
+      statusMessage.clear();
       setProfile(null);
-      setTasks([]);
 
       try {
-        // 确保档案存在，然后并行加载档案和任务
         const ensuredProfile = await ensureProfile(currentUser);
-        const [nextProfile, nextTasks] = await Promise.all([
-          ensuredProfile ? Promise.resolve(ensuredProfile) : fetchProfile(currentUser.id),
-          fetchTasks(),
-        ]);
+        const nextProfile = ensuredProfile
+          ? ensuredProfile
+          : await fetchProfile(currentUser.id);
 
-        if (!isActive) {
-          return;
-        }
-
+        if (!isActive) return;
         setProfile(nextProfile);
-        setTasks(nextTasks);
       } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setMessage(getErrorMessage(error, "加载工作台失败。"));
-        setMessageTone("error");
+        if (!isActive) return;
+        statusMessage.showError(getErrorMessage(error, "加载档案失败。"));
       } finally {
-        if (isActive) {
-          setIsProfileLoading(false);
-        }
+        if (isActive) setIsProfileLoading(false);
       }
     }
 
-    void bootstrap();
+    void bootstrapProfile();
 
     return () => {
       isActive = false;
     };
-  }, [user]);
-
-  /**
-   * Supabase Realtime 订阅
-   * 监听当前用户的 tasks 表变更，自动同步到本地状态
-   * 支持多标签页实时感知其他标签页的改动
-   */
-  useEffect(() => {
-    if (!user || !hasSupabaseConfig()) {
-      return;
-    }
-
-    const supabase = getSupabaseClient();
-
-    // 取消旧的订阅（防止重复）
-    if (realtimeChannelRef.current) {
-      void supabase.removeChannel(realtimeChannelRef.current);
-    }
-
-    const channel = supabase
-      .channel(`tasks:user:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "tasks",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newTask = payload.new as Task;
-          // 避免当前标签页自己触发的写操作重复追加（乐观更新已处理）
-          setTasks((prev) => {
-            if (prev.some((t) => t.id === newTask.id)) return prev;
-            return [newTask, ...prev];
-          });
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "tasks",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const updatedTask = payload.new as Task;
-          setTasks((prev) =>
-            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
-          );
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "tasks",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const deletedId = (payload.old as { id: string }).id;
-          setTasks((prev) => prev.filter((t) => t.id !== deletedId));
-        },
-      )
-      .subscribe();
-
-    realtimeChannelRef.current = channel;
-
-    return () => {
-      void supabase.removeChannel(channel);
-      realtimeChannelRef.current = null;
-    };
-  }, [user]);
-
-  /** 重新加载任务列表 */
-  async function reloadTasks() {
-    setIsTaskLoading(true);
-
-    try {
-      const nextTasks = await fetchTasks();
-      setTasks(nextTasks);
-    } catch (error) {
-      setMessage(getErrorMessage(error, "加载任务失败。"));
-      setMessageTone("error");
-    } finally {
-      setIsTaskLoading(false);
-    }
-  }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** 提交登录或注册表单 */
   async function submitAuth() {
+    // 表单验证
+    const schema = authMode === "sign-up" ? authSignUpSchema : authSignInSchema;
+    const errors = validateForm(authForm, schema);
+    if (hasErrors(errors)) {
+      setAuthErrors(errors);
+      return;
+    }
+    setAuthErrors({});
+
     setIsAuthLoading(true);
-    setMessage("");
+    statusMessage.clear();
 
     try {
       if (authMode === "sign-in") {
@@ -286,7 +118,7 @@ export function useHomeScreen() {
           throw error;
         }
 
-        setMessage("欢迎回来，已经登录。");
+        statusMessage.showSuccess("欢迎回来，已经登录。");
       } else {
         const { error } = await signUp(
           authForm.email,
@@ -297,18 +129,16 @@ export function useHomeScreen() {
           throw error;
         }
 
-        setMessage("账号已创建。");
+        statusMessage.showSuccess("账号已创建。");
       }
 
-      setMessageTone("success");
       setAuthForm((current) => ({
         ...current,
         password: "",
         nickname: "",
       }));
     } catch (error) {
-      setMessage(getErrorMessage(error, "操作失败，请稍后再试。"));
-      setMessageTone("error");
+      statusMessage.showError(getErrorMessage(error, "操作失败，请稍后再试。"));
     } finally {
       setIsAuthLoading(false);
     }
@@ -318,171 +148,53 @@ export function useHomeScreen() {
   async function logout() {
     await signOut();
     setProfile(null);
-    setTasks([]);
-    setMessage("你已退出当前账号。");
-    setMessageTone("neutral");
+    tasksHook.setTasks([]);
+    statusMessage.showNeutral("你已退出当前账号。");
   }
 
-  /** 提交新任务 */
-  async function submitTask() {
-    if (!user || !taskForm.title.trim()) {
-      return;
-    }
-
-    setIsTaskLoading(true);
-    setMessage("");
-
-    try {
-      await createTask(user.id, taskForm);
-      setTaskForm(defaultTaskForm);
-      setMessage("任务已保存。");
-      setMessageTone("success");
-      await reloadTasks();
-    } catch (error) {
-      setMessage(getErrorMessage(error, "保存任务失败。"));
-      setMessageTone("error");
-    } finally {
-      setIsTaskLoading(false);
-    }
-  }
-
-  /** 切换任务完成状态（乐观更新） */
-  async function toggleTask(task: Task) {
-    try {
-      await updateTaskStatus(task);
-      // 先更新本地状态，无需等待接口返回
-      setTasks((currentTasks) =>
-        currentTasks.map((currentTask) =>
-          currentTask.id === task.id
-            ? { ...currentTask, is_done: !currentTask.is_done }
-            : currentTask,
-        ),
-      );
-    } catch (error) {
-      setMessage(getErrorMessage(error, "更新任务失败。"));
-      setMessageTone("error");
-    }
-  }
-
-  /** 删除任务（乐观更新） */
-  async function deleteTask(taskId: string) {
-    try {
-      await removeTask(taskId);
-      setTasks((currentTasks) =>
-        currentTasks.filter((task) => task.id !== taskId),
-      );
-    } catch (error) {
-      setMessage(getErrorMessage(error, "删除任务失败。"));
-      setMessageTone("error");
-    }
-  }
-
-  /** 打开任务编辑器，并填充当前任务数据 */
-  function openEditor(task: Task) {
-    setEditingTask(task);
-    setEditForm({
-      title: task.title,
-      description: task.description ?? "",
-      dueDate: task.due_date ?? "",
-    });
-  }
-
-  /** 关闭编辑器并重置表单 */
-  function closeEditor() {
-    setEditingTask(null);
-    setEditForm(defaultEditForm);
-  }
-
-  /** 提交任务编辑（乐观更新） */
-  async function submitEdit() {
-    if (!editingTask || !editForm.title.trim()) {
-      return;
-    }
-
-    setIsEditSaving(true);
-    setMessage("");
-
-    try {
-      await updateTask(editingTask.id, editForm);
-      setTasks((currentTasks) =>
-        currentTasks.map((task) =>
-          task.id === editingTask.id
-            ? {
-                ...task,
-                title: editForm.title.trim(),
-                description: editForm.description.trim() || null,
-                due_date: editForm.dueDate || null,
-                updated_at: new Date().toISOString(),
-              }
-            : task,
-        ),
-      );
-      setMessage("任务已更新。");
-      setMessageTone("success");
-      closeEditor();
-    } catch (error) {
-      setMessage(getErrorMessage(error, "更新任务失败。"));
-      setMessageTone("error");
-    } finally {
-      setIsEditSaving(false);
-    }
-  }
-
+  // 返回值与重构前完全一致的 key 列表
   return {
     authMode,
     authForm,
-    completedCount,
+    authErrors,
+    completedCount: tasksHook.completedCount,
     displayName,
     isAuthLoading,
     isAuthReady,
     isProfileLoading,
-    isTaskLoading,
-    message,
-    messageTone,
+    isTaskLoading: tasksHook.isTaskLoading,
+    message: statusMessage.message,
+    messageTone: statusMessage.messageTone,
     profile,
     setAuthForm,
     setAuthMode,
-    setTaskForm,
+    setTaskForm: tasksHook.setTaskForm,
     submitAuth,
-    submitTask,
-    taskForm,
-    taskProgress,
-    tasks,
-    toggleTask,
-    deleteTask,
-    reloadTasks,
+    submitTask: tasksHook.submitTask,
+    taskForm: tasksHook.taskForm,
+    taskProgress: tasksHook.taskProgress,
+    tasks: tasksHook.tasks,
+    toggleTask: tasksHook.toggleTask,
+    deleteTask: tasksHook.deleteTask,
+    reloadTasks: tasksHook.reloadTasks,
     user,
     logout,
-    editingTask,
-    editForm,
-    isEditSaving,
-    setEditForm,
-    openEditor,
-    closeEditor,
-    submitEdit,
-    filterStatus,
-    setFilterStatus,
-    sortBy,
-    setSortBy,
-    filteredTasks,
-    viewMode,
-    setViewMode,
-    // 看板拖拽后更新任务状态
-    handleKanbanDrop: async (taskId: string, newStatus: Task["status"]) => {
-      // 乐观更新：先改本地状态
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === taskId
-            ? { ...t, status: newStatus, is_done: newStatus === "done" }
-            : t,
-        ),
-      );
-      try {
-        await updateTaskStatusById(taskId, newStatus);
-      } catch {
-        // 失败则回滚：重新拉取
-        await reloadTasks();
-      }
-    },
+    taskErrors: tasksHook.taskErrors,
+    editErrors: editorHook.editErrors,
+    editingTask: editorHook.editingTask,
+    editForm: editorHook.editForm,
+    isEditSaving: editorHook.isEditSaving,
+    setEditForm: editorHook.setEditForm,
+    openEditor: editorHook.openEditor,
+    closeEditor: editorHook.closeEditor,
+    submitEdit: editorHook.submitEdit,
+    filterStatus: tasksHook.filterStatus,
+    setFilterStatus: tasksHook.setFilterStatus,
+    sortBy: tasksHook.sortBy,
+    setSortBy: tasksHook.setSortBy,
+    filteredTasks: tasksHook.filteredTasks,
+    viewMode: tasksHook.viewMode,
+    setViewMode: tasksHook.setViewMode,
+    handleKanbanDrop: tasksHook.handleKanbanDrop,
   };
 }

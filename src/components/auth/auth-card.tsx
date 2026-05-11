@@ -7,6 +7,8 @@ import type { FormEvent } from "react";
 import { motion } from "framer-motion";
 import type { AuthFormState, AuthMode } from "@/types/workspace";
 import { modalVariants, overlayVariants } from "@/lib/animations";
+import { FieldError } from "@/components/common/field-error";
+import type { FieldErrors } from "@/lib/validation";
 
 type AuthCardProps = {
   authForm: AuthFormState;      // 表单当前值
@@ -16,6 +18,7 @@ type AuthCardProps = {
   onChange: (field: keyof AuthFormState, value: string) => void; // 字段变更
   onSubmit: (event: FormEvent<HTMLFormElement>) => void; // 表单提交
   configReady: boolean;         // Supabase 配置是否就绪
+  errors?: FieldErrors<"email" | "password" | "nickname">; // 字段级验证错误
 };
 
 /**
@@ -30,6 +33,7 @@ export function AuthCard({
   onChange,
   onSubmit,
   configReady,
+  errors,
 }: AuthCardProps) {
   return (
     <motion.section
@@ -86,12 +90,13 @@ export function AuthCard({
             <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
               昵称
               <input
-                className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+                className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.nickname ? "border-red-500 dark:border-red-500" : ""}`}
                 maxLength={30}
                 onChange={(event) => onChange("nickname", event.target.value)}
                 placeholder="给自己起个名字"
                 value={authForm.nickname}
               />
+              <FieldError error={errors?.nickname} />
               <span className="self-end text-xs text-text-muted">
                 {authForm.nickname.length}/30
               </span>
@@ -101,18 +106,19 @@ export function AuthCard({
           <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             邮箱
             <input
-              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+              className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.email ? "border-red-500 dark:border-red-500" : ""}`}
               onChange={(event) => onChange("email", event.target.value)}
               placeholder="请输入邮箱地址"
               required
               type="email"
               value={authForm.email}
             />
+            <FieldError error={errors?.email} />
           </label>
           <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             密码
             <input
-              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+              className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.password ? "border-red-500 dark:border-red-500" : ""}`}
               minLength={6}
               onChange={(event) => onChange("password", event.target.value)}
               placeholder="至少 6 位"
@@ -120,6 +126,7 @@ export function AuthCard({
               type="password"
               value={authForm.password}
             />
+            <FieldError error={errors?.password} />
           </label>
 
           <button

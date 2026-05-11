@@ -9,6 +9,8 @@ import type { FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Task } from "@/types/database";
 import { modalVariants, overlayVariants } from "@/lib/animations";
+import { FieldError } from "@/components/common/field-error";
+import type { FieldErrors } from "@/lib/validation";
 
 /** 编辑表单的数据结构 */
 export type TaskEditorForm = {
@@ -25,6 +27,7 @@ type TaskEditorProps = {
   onChange: (field: keyof TaskEditorForm, value: string) => void; // 字段变更
   onSubmit: (event: FormEvent<HTMLFormElement>) => void; // 提交保存
   onClose: () => void;         // 关闭弹窗
+  errors?: FieldErrors<"title">; // 字段级验证错误
 };
 
 /**
@@ -39,6 +42,7 @@ export function TaskEditor({
   onChange,
   onSubmit,
   onClose,
+  errors,
 }: TaskEditorProps) {
   return (
     <AnimatePresence>
@@ -93,13 +97,14 @@ export function TaskEditor({
           <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
             标题
             <input
-              className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+              className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.title ? "border-red-500 dark:border-red-500" : ""}`}
               maxLength={120}
               onChange={(event) => onChange("title", event.target.value)}
               placeholder="任务标题"
               required
               value={form.title}
             />
+            <FieldError error={errors?.title} />
             <span className="self-end text-xs text-text-muted">
               {form.title.length}/120
             </span>

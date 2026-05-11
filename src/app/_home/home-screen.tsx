@@ -89,6 +89,7 @@ export function HomeScreen() {
             authForm={workspace.authForm}
             authMode={workspace.authMode}
             configReady={configReady}
+            errors={workspace.authErrors}
             isAuthLoading={workspace.isAuthLoading}
             onAuthModeChange={workspace.setAuthMode}
             onChange={(field, value) =>
@@ -108,6 +109,7 @@ export function HomeScreen() {
                 userEmail={workspace.user.email ?? null}
               />
               <TaskComposer
+                errors={workspace.taskErrors}
                 form={workspace.taskForm}
                 isTaskLoading={workspace.isTaskLoading}
                 onChange={(field, value) =>
@@ -190,6 +192,7 @@ export function HomeScreen() {
             {/* 任务编辑弹窗 */}
             {workspace.editingTask ? (
               <TaskEditor
+                errors={workspace.editErrors}
                 form={workspace.editForm}
                 isOpen={Boolean(workspace.editingTask)}
                 isSaving={workspace.isEditSaving}

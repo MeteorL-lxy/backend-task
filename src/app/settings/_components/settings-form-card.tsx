@@ -4,6 +4,8 @@
  */
 
 import type { FormEvent } from "react";
+import { FieldError } from "@/components/common/field-error";
+import type { FieldErrors } from "@/lib/validation";
 
 type SettingsFormCardProps = {
   form: {
@@ -14,6 +16,7 @@ type SettingsFormCardProps = {
   isSaving: boolean; // 是否正在保存
   onChange: (field: "nickname" | "bio" | "avatarUrl", value: string) => void; // 字段变更
   onSubmit: (event: FormEvent<HTMLFormElement>) => void; // 表单提交
+  errors?: FieldErrors<"nickname" | "avatarUrl" | "bio">; // 字段级验证错误
 };
 
 /**
@@ -24,6 +27,7 @@ export function SettingsFormCard({
   isSaving,
   onChange,
   onSubmit,
+  errors,
 }: SettingsFormCardProps) {
   return (
     <form
@@ -46,30 +50,33 @@ export function SettingsFormCard({
         <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
           昵称
           <input
-            className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+            className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.nickname ? "border-red-500 dark:border-red-500" : ""}`}
             onChange={(event) => onChange("nickname", event.target.value)}
             placeholder="显示名称"
             value={form.nickname}
           />
+          <FieldError error={errors?.nickname} />
         </label>
         <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
           头像地址
           <input
-            className="rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+            className={`rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.avatarUrl ? "border-red-500 dark:border-red-500" : ""}`}
             onChange={(event) => onChange("avatarUrl", event.target.value)}
             placeholder="请输入头像图片地址"
             type="url"
             value={form.avatarUrl}
           />
+          <FieldError error={errors?.avatarUrl} />
         </label>
         <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
           简介
           <textarea
-            className="min-h-28 rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised"
+            className={`min-h-28 rounded-[18px] border border-border bg-surface px-4 py-3 outline-none transition focus:border-accent focus:bg-surface-raised ${errors?.bio ? "border-red-500 dark:border-red-500" : ""}`}
             onChange={(event) => onChange("bio", event.target.value)}
             placeholder="写一点你的角色或职责"
             value={form.bio}
           />
+          <FieldError error={errors?.bio} />
         </label>
         <button
           className="rounded-[18px] bg-accent px-4 py-3.5 font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"

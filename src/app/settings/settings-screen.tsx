@@ -93,6 +93,7 @@ export function SettingsScreen() {
               userEmail={settings.user.email ?? null}
             />
             <SettingsFormCard
+              errors={settings.settingsErrors}
               form={settings.settingsForm}
               isSaving={settings.isSaving}
               onChange={(field, value) =>

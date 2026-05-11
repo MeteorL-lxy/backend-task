@@ -25,6 +25,8 @@ import type {
   MessageTone,
 } from "@/types/workspace";
 import { getErrorMessage, readNicknameFromUser } from "@/utils/workspace";
+import { validateForm, hasErrors, type FieldErrors } from "@/lib/validation";
+import { settingsFormSchema } from "@/lib/form-schemas";
 
 /** 设置表单的数据结构 */
 type SettingsFormState = {
@@ -64,6 +66,7 @@ export function useSettingsScreen() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [settingsErrors, setSettingsErrors] = useState<FieldErrors<"nickname" | "avatarUrl" | "bio">>({});
 
   // 展示名称优先级：档案昵称 > 认证元数据昵称 > 邮箱前缀
   const displayName =
@@ -177,6 +180,14 @@ export function useSettingsScreen() {
       return;
     }
 
+    // 表单验证
+    const errors = validateForm(settingsForm, settingsFormSchema);
+    if (hasErrors(errors)) {
+      setSettingsErrors(errors);
+      return;
+    }
+    setSettingsErrors({});
+
     setIsSaving(true);
     setMessage("");
 
@@ -226,5 +237,6 @@ export function useSettingsScreen() {
     submitAuth,
     user,
     logout,
+    settingsErrors,
   };
 }
