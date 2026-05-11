@@ -7,6 +7,30 @@ import { getSupabaseClient } from "@/api/supabase/client";
 import type { Task } from "@/types/database";
 
 /**
+ * 更新任务的看板状态（拖拽后调用）
+ * @param taskId - 任务 UUID
+ * @param status - 目标状态
+ */
+export async function updateTaskStatusById(
+  taskId: string,
+  status: Task["status"],
+) {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("tasks")
+    .update({
+      status,
+      is_done: status === "done",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", taskId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+/**
  * 获取当前登录用户的所有任务
  * 按创建时间倒序排列（最新的排在最前面）
  * @returns 任务数组
@@ -39,6 +63,7 @@ export async function createTask(
     user_id: userId,
     title: input.title.trim(),
     description: input.description.trim() || null,
+    status: "todo",
     due_date: input.dueDate || null,
   });
 
@@ -53,10 +78,12 @@ export async function createTask(
  */
 export async function updateTaskStatus(task: Task) {
   const supabase = getSupabaseClient();
+  const nextStatus = task.status === "done" ? "todo" : "done";
   const { error } = await supabase
     .from("tasks")
     .update({
-      is_done: !task.is_done,
+      is_done: nextStatus === "done",
+      status: nextStatus,
       updated_at: new Date().toISOString(),
     })
     .eq("id", task.id);
@@ -67,23 +94,29 @@ export async function updateTaskStatus(task: Task) {
 }
 
 /**
- * 编辑任务内容（标题、描述、截止日期）
+ * 编辑任务内容（标题、描述、截止日期、状态）
  * @param taskId - 任务 UUID
  * @param input - 需要更新的字段
  */
 export async function updateTask(
   taskId: string,
-  input: { title?: string; description?: string; dueDate?: string | null },
+  input: { title?: string; description?: string; dueDate?: string | null; status?: Task["status"] },
 ) {
   const supabase = getSupabaseClient();
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (input.title !== undefined) updateData.title = input.title.trim();
+  if (input.description !== undefined) updateData.description = input.description.trim() || null;
+  if (input.dueDate !== undefined) updateData.due_date = input.dueDate || null;
+  if (input.status !== undefined) {
+    updateData.status = input.status;
+    updateData.is_done = input.status === "done";
+  }
+
   const { error } = await supabase
     .from("tasks")
-    .update({
-      title: input.title?.trim(),
-      description: input.description?.trim() || null,
-      due_date: input.dueDate || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData as object)
     .eq("id", taskId);
 
   if (error) {

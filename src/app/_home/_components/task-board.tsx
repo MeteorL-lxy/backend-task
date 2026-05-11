@@ -4,6 +4,7 @@
  */
 
 import type { Task } from "@/types/database";
+import { TASK_STATUS_META } from "@/types/workspace";
 
 type TaskBoardProps = {
   tasks: Task[];               // 任务列表
@@ -95,18 +96,53 @@ export function TaskBoard({
         </div>
       </div>
 
-      {/* 加载中且无数据时 */}
+      {/* 加载中且无数据时：骨架屏 */}
       {isTaskLoading && tasks.length === 0 ? (
-        <p className="rounded-[22px] bg-[#f7f7f2] p-4 text-sm text-[#677367]">
-          正在读取数据库...
-        </p>
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              className="rounded-[24px] border border-[#e4e7df] bg-[#fbfaf5] p-5"
+              key={index}
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-3 w-3 animate-pulse rounded-full bg-[#d8d8d0]" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-5 w-1/3 animate-pulse rounded-full bg-[#e4e4dc]" />
+                  <div className="h-4 w-2/3 animate-pulse rounded-full bg-[#e4e4dc]" />
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-[#e4e4dc]" />
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-[#e4e4dc]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : null}
 
       {/* 空状态 */}
       {!isTaskLoading && tasks.length === 0 ? (
-        <p className="rounded-[22px] bg-[#f7f7f2] p-4 text-sm text-[#677367]">
-          还没有任务。左侧新增一个，开始安排今天的事项。
-        </p>
+        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[#d4d9cf] bg-[#fbfaf5] p-10 text-center">
+          <svg
+            className="h-12 w-12 text-[#a8b2a0]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75m3-.75h.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <p className="mt-4 text-base font-medium text-[#586356]">
+            还没有任务
+          </p>
+          <p className="mt-1 text-sm text-[#7b877c]">
+            在左侧新建一个，开始安排今天的事项
+          </p>
+        </div>
       ) : null}
 
       {/* 任务卡片列表 */}
@@ -142,8 +178,10 @@ export function TaskBoard({
                   </p>
                 ) : null}
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[#7c866f]">
-                  <span className="rounded-full bg-[#eef2ea] px-3 py-1">
-                    {task.is_done ? "已完成" : "进行中"}
+                  <span
+                    className={`rounded-full px-3 py-1 ${TASK_STATUS_META[task.status].colorClass}`}
+                  >
+                    {TASK_STATUS_META[task.status].label}
                   </span>
                   {task.due_date ? (
                     <span className="rounded-full bg-[#f4eadb] px-3 py-1 text-[#94653a]">

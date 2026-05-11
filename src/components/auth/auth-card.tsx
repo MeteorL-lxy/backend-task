@@ -75,10 +75,14 @@ export function AuthCard({
               昵称
               <input
                 className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+                maxLength={30}
                 onChange={(event) => onChange("nickname", event.target.value)}
                 placeholder="给自己起个名字"
                 value={authForm.nickname}
               />
+              <span className="self-end text-xs text-[#8a968a]">
+                {authForm.nickname.length}/30
+              </span>
             </label>
           ) : null}
 

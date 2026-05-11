@@ -86,27 +86,36 @@ export function TaskEditor({
             标题
             <input
               className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              maxLength={120}
               onChange={(event) => onChange("title", event.target.value)}
               placeholder="任务标题"
               required
               value={form.title}
             />
+            <span className="self-end text-xs text-[#8a968a]">
+              {form.title.length}/120
+            </span>
           </label>
 
           <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
             描述
             <textarea
               className="min-h-24 rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              maxLength={500}
               onChange={(event) => onChange("description", event.target.value)}
-              placeholder="可选"
+              placeholder="可选，最多 500 字"
               value={form.description}
             />
+            <span className="self-end text-xs text-[#8a968a]">
+              {form.description.length}/500
+            </span>
           </label>
 
           <label className="flex flex-col gap-2 text-sm font-medium text-[#2c342d]">
             截止日期
             <input
               className="rounded-[18px] border border-[#ced4c8] bg-[#fbfbf8] px-4 py-3 outline-none transition focus:border-[#1b4332] focus:bg-white"
+              min={new Date().toISOString().split("T")[0]}
               onChange={(event) => onChange("dueDate", event.target.value)}
               type="date"
               value={form.dueDate}

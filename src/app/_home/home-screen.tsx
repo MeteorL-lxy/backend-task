@@ -11,8 +11,10 @@ import { ProfilePanel } from "@/app/_home/_components/profile-panel";
 import { TaskBoard } from "@/app/_home/_components/task-board";
 import { TaskComposer } from "@/app/_home/_components/task-composer";
 import { TaskEditor } from "@/app/_home/_components/task-editor";
+import { TaskKanban } from "@/app/_home/_components/task-kanban";
 import { useHomeScreen } from "@/app/_home/use-home-screen";
 import { AuthCard } from "@/components/auth/auth-card";
+import { CommandPanel } from "@/components/common/command-panel";
 import { ConfigWarning } from "@/components/common/config-warning";
 import { StatusBanner } from "@/components/common/status-banner";
 import { WorkspaceHeader } from "@/layout/app-header";
@@ -113,18 +115,66 @@ export function HomeScreen() {
               />
             </aside>
 
-            <TaskBoard
-              completedCount={workspace.completedCount}
-              filterStatus={workspace.filterStatus}
-              isTaskLoading={workspace.isTaskLoading}
-              onDelete={(taskId) => void workspace.deleteTask(taskId)}
-              onEdit={(task) => workspace.openEditor(task)}
-              onFilterChange={workspace.setFilterStatus}
-              onRefresh={() => void workspace.reloadTasks()}
-              onSortChange={workspace.setSortBy}
-              onToggle={(task) => void workspace.toggleTask(task)}
-              sortBy={workspace.sortBy}
-              tasks={workspace.filteredTasks}
+            <div className="flex flex-col gap-4">
+              {/* 视图切换 */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-[#7b877c]">视图</span>
+                <div className="flex rounded-full border border-[#d9ddd4] bg-[#f7f5ef] p-1">
+                  <button
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                      workspace.viewMode === "list"
+                        ? "bg-[#1b4332] text-white"
+                        : "text-[#657064] hover:text-[#1b4332]"
+                    }`}
+                    onClick={() => workspace.setViewMode("list")}
+                    type="button"
+                  >
+                    列表
+                  </button>
+                  <button
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                      workspace.viewMode === "kanban"
+                        ? "bg-[#1b4332] text-white"
+                        : "text-[#657064] hover:text-[#1b4332]"
+                    }`}
+                    onClick={() => workspace.setViewMode("kanban")}
+                    type="button"
+                  >
+                    看板
+                  </button>
+                </div>
+              </div>
+
+              {workspace.viewMode === "list" ? (
+                <TaskBoard
+                  completedCount={workspace.completedCount}
+                  filterStatus={workspace.filterStatus}
+                  isTaskLoading={workspace.isTaskLoading}
+                  onDelete={(taskId) => void workspace.deleteTask(taskId)}
+                  onEdit={(task) => workspace.openEditor(task)}
+                  onFilterChange={workspace.setFilterStatus}
+                  onRefresh={() => void workspace.reloadTasks()}
+                  onSortChange={workspace.setSortBy}
+                  onToggle={(task) => void workspace.toggleTask(task)}
+                  sortBy={workspace.sortBy}
+                  tasks={workspace.filteredTasks}
+                />
+              ) : (
+                <TaskKanban
+                  onDelete={(taskId) => void workspace.deleteTask(taskId)}
+                  onDrop={(taskId, newStatus) => void workspace.handleKanbanDrop(taskId, newStatus)}
+                  onEdit={(task) => workspace.openEditor(task)}
+                  tasks={workspace.filteredTasks}
+                />
+              )}
+            </div>
+
+            {/* 全局命令面板（Cmd+K） */}
+            <CommandPanel
+              onEditTask={(task) => workspace.openEditor(task)}
+              onViewModeChange={workspace.setViewMode}
+              tasks={workspace.tasks}
+              viewMode={workspace.viewMode}
             />
 
             {/* 任务编辑弹窗 */}

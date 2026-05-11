@@ -20,6 +20,7 @@ import {
   removeTask,
   updateTask,
   updateTaskStatus,
+  updateTaskStatusById,
 } from "@/api/tasks";
 import type {
   AuthFormState,
@@ -74,6 +75,8 @@ export function useHomeScreen() {
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "completed">("all");
   // 排序方式
   const [sortBy, setSortBy] = useState<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">("createdAtDesc");
+  // 视图模式：列表 / 看板
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
   // 已完成任务数量（记忆化，避免每次渲染都重新计算）
   const completedCount = useMemo(
@@ -385,5 +388,24 @@ export function useHomeScreen() {
     sortBy,
     setSortBy,
     filteredTasks,
+    viewMode,
+    setViewMode,
+    // 看板拖拽后更新任务状态
+    handleKanbanDrop: async (taskId: string, newStatus: Task["status"]) => {
+      // 乐观更新：先改本地状态
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, status: newStatus, is_done: newStatus === "done" }
+            : t,
+        ),
+      );
+      try {
+        await updateTaskStatusById(taskId, newStatus);
+      } catch {
+        // 失败则回滚：重新拉取
+        await reloadTasks();
+      }
+    },
   };
 }

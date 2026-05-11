@@ -22,3 +22,22 @@ export type TaskFormState = {
   description: string;
   dueDate: string;
 };
+
+/** 任务状态的元数据映射（标签、颜色、圆点样式） */
+export const TASK_STATUS_META = {
+  todo: {
+    label: "待办",
+    colorClass: "bg-[#f4eadb] text-[#94653a]",
+    dotClass: "bg-[#d8b367]",
+  },
+  in_progress: {
+    label: "进行中",
+    colorClass: "bg-[#e8f0fc] text-[#4a6fa5]",
+    dotClass: "bg-[#4a6fa5]",
+  },
+  done: {
+    label: "已完成",
+    colorClass: "bg-[#eef2ea] text-[#4a6b50]",
+    dotClass: "bg-[#6f8d79]",
+  },
+} as const;

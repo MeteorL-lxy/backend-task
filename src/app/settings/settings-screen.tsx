@@ -8,6 +8,7 @@
 import type { FormEvent } from "react";
 import { hasSupabaseConfig } from "@/api/supabase/client";
 import { AuthCard } from "@/components/auth/auth-card";
+import { CommandPanel } from "@/components/common/command-panel";
 import { ConfigWarning } from "@/components/common/config-warning";
 import { StatusBanner } from "@/components/common/status-banner";
 import { WorkspaceHeader } from "@/layout/app-header";
@@ -64,6 +65,9 @@ export function SettingsScreen() {
         {!configReady ? <ConfigWarning /> : null}
 
         <StatusBanner message={settings.message} tone={settings.messageTone} />
+
+        {/* 全局命令面板（Cmd+K） */}
+        <CommandPanel />
 
         {/* 未登录：展示认证卡片 */}
         {!settings.user ? (
