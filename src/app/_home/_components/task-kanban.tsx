@@ -27,6 +27,8 @@ type TaskKanbanProps = {
   onDrop: (taskId: string, newStatus: Task["status"]) => void; // 拖拽后更新状态
   onEdit: (task: Task) => void; // 打开编辑弹窗
   onDelete: (taskId: string) => void; // 删除任务
+  selectedIds: Set<string>;    // 当前选中的任务 ID 集合
+  selectTask: (taskId: string, checked: boolean) => void; // 选择/取消选择单个任务
 };
 
 /**
@@ -36,10 +38,14 @@ function KanbanCard({
   task,
   onEdit,
   onDelete,
+  selectedIds,
+  selectTask,
 }: {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  selectedIds: Set<string>;
+  selectTask: (taskId: string, checked: boolean) => void;
 }) {
   const {
     attributes,
@@ -72,6 +78,17 @@ function KanbanCard({
       {...listeners}
     >
       <div className="flex items-start justify-between gap-3">
+        {/* 选择 checkbox */}
+        <input
+          type="checkbox"
+          checked={selectedIds.has(task.id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            selectTask(task.id, e.target.checked);
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded accent-accent"
+        />
         <div className="min-w-0 flex-1">
           <h3
             className={`text-base font-medium ${
@@ -134,12 +151,16 @@ function KanbanColumn({
   tasks,
   onEdit,
   onDelete,
+  selectedIds,
+  selectTask,
 }: {
   status: Task["status"];
   title: string;
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  selectedIds: Set<string>;
+  selectTask: (taskId: string, checked: boolean) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
@@ -147,6 +168,12 @@ function KanbanColumn({
   });
 
   const columnTasks = tasks.filter((t) => t.status === status);
+
+  // 按列折叠：默认显示前 10 条，可展开全部
+  const INITIAL_SHOW = 10;
+  const [expanded, setExpanded] = useState(false);
+  const displayTasks = expanded ? columnTasks : columnTasks.slice(0, INITIAL_SHOW);
+  const hasMore = columnTasks.length > INITIAL_SHOW;
 
   // 列头颜色
   const headerColor =
@@ -180,19 +207,31 @@ function KanbanColumn({
         variants={kanbanColumnVariants}
       >
         <SortableContext
-          items={columnTasks.map((t) => t.id)}
+          items={displayTasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
-          {columnTasks.map((task) => (
+          {displayTasks.map((task) => (
             <motion.div key={task.id} variants={kanbanCardVariants}>
               <KanbanCard
                 onDelete={onDelete}
                 onEdit={onEdit}
                 task={task}
+                selectedIds={selectedIds}
+                selectTask={selectTask}
               />
             </motion.div>
           ))}
         </SortableContext>
+        {/* 展开/收起按钮 */}
+        {hasMore ? (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-raised dark:hover:bg-surface-raised"
+            type="button"
+          >
+            {expanded ? "收起" : `展开更多 (${columnTasks.length - INITIAL_SHOW})`}
+          </button>
+        ) : null}
         {columnTasks.length === 0 ? (
           <motion.div
             animate={{ opacity: 1, scale: 1 }}
@@ -212,7 +251,7 @@ function KanbanColumn({
  * 看板视图主组件
  * 包含 DndContext 和三个状态列
  */
-export function TaskKanban({ tasks, onDrop, onEdit, onDelete }: TaskKanbanProps) {
+export function TaskKanban({ tasks, onDrop, onEdit, onDelete, selectedIds, selectTask }: TaskKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // 使用指针传感器，避免与滚动/点击冲突
@@ -266,6 +305,8 @@ export function TaskKanban({ tasks, onDrop, onEdit, onDelete }: TaskKanbanProps)
           status="todo"
           tasks={tasks}
           title="待办"
+          selectedIds={selectedIds}
+          selectTask={selectTask}
         />
         <KanbanColumn
           onDelete={onDelete}
@@ -273,6 +314,8 @@ export function TaskKanban({ tasks, onDrop, onEdit, onDelete }: TaskKanbanProps)
           status="in_progress"
           tasks={tasks}
           title="进行中"
+          selectedIds={selectedIds}
+          selectTask={selectTask}
         />
         <KanbanColumn
           onDelete={onDelete}
@@ -280,6 +323,8 @@ export function TaskKanban({ tasks, onDrop, onEdit, onDelete }: TaskKanbanProps)
           status="done"
           tasks={tasks}
           title="已完成"
+          selectedIds={selectedIds}
+          selectTask={selectTask}
         />
       </div>
     </DndContext>

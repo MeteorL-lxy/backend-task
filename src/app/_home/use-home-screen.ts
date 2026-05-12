@@ -196,5 +196,11 @@ export function useHomeScreen() {
     viewMode: tasksHook.viewMode,
     setViewMode: tasksHook.setViewMode,
     handleKanbanDrop: tasksHook.handleKanbanDrop,
+    selectedIds: tasksHook.selectedIds,
+    selectTask: tasksHook.selectTask,
+    selectAll: tasksHook.selectAll,
+    clearSelection: tasksHook.clearSelection,
+    batchDelete: tasksHook.batchDelete,
+    batchSetStatus: tasksHook.batchSetStatus,
   };
 }

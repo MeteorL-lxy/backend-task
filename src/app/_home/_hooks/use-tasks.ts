@@ -14,8 +14,10 @@ import {
   createTask,
   fetchTasks,
   removeTask,
+  removeTasksBatch,
   updateTaskStatus,
   updateTaskStatusById,
+  updateTaskStatusBatch,
 } from "@/api/tasks";
 import { getSupabaseClient, hasSupabaseConfig } from "@/api/supabase/client";
 import type { StatusMessageHandle } from "@/app/_home/_hooks/use-status-message";
@@ -52,12 +54,12 @@ export type UseTasksHandle = {
   isTaskLoading: boolean;
   /** 筛选状态：全部 / 进行中 / 已完成 */
   filterStatus: "all" | "active" | "completed";
-  /** 设置筛选状态 */
-  setFilterStatus: React.Dispatch<React.SetStateAction<"all" | "active" | "completed">>;
+  /** 设置筛选状态（同时清空选择） */
+  setFilterStatus: (status: "all" | "active" | "completed") => void;
   /** 排序方式 */
   sortBy: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc";
-  /** 设置排序方式 */
-  setSortBy: React.Dispatch<React.SetStateAction<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">>;
+  /** 设置排序方式（同时清空选择） */
+  setSortBy: (sort: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc") => void;
   /** 视图模式：列表 / 看板 */
   viewMode: "list" | "kanban";
   /** 设置视图模式 */
@@ -80,6 +82,18 @@ export type UseTasksHandle = {
   handleKanbanDrop: (taskId: string, newStatus: Task["status"]) => Promise<void>;
   /** 任务创建表单的字段级错误 */
   taskErrors: FieldErrors<"title">;
+  /** 当前选中的任务 ID 集合 */
+  selectedIds: Set<string>;
+  /** 选择/取消选择单个任务 */
+  selectTask: (taskId: string, checked: boolean) => void;
+  /** 全选/取消全选（基于当前筛选结果） */
+  selectAll: (checked: boolean) => void;
+  /** 清空选择 */
+  clearSelection: () => void;
+  /** 批量删除（乐观更新） */
+  batchDelete: () => Promise<void>;
+  /** 批量更新状态（乐观更新） */
+  batchSetStatus: (status: Task["status"]) => Promise<void>;
 };
 
 /**
@@ -99,12 +113,14 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
   const [sortBy, setSortBy] = useState<"createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc">("createdAtDesc");
   // 视图模式：列表 / 看板
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  // 多选状态：用 Set 管理，与 DOM 挂载/卸载无关
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   // 保存 Realtime 频道引用，用于组件卸载时取消订阅
   const realtimeChannelRef = useRef<ReturnType<ReturnType<typeof getSupabaseClient>["channel"]> | null>(null);
 
   // 已完成任务数量（记忆化，避免每次渲染都重新计算）
   const completedCount = useMemo(
-    () => tasks.filter((task) => task.is_done).length,
+    () => tasks.filter((task) => task.status === "done").length,
     [tasks],
   );
 
@@ -118,9 +134,9 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
 
     // 按状态筛选
     if (filterStatus === "active") {
-      result = result.filter((t) => !t.is_done);
+      result = result.filter((t) => t.status !== "done");
     } else if (filterStatus === "completed") {
-      result = result.filter((t) => t.is_done);
+      result = result.filter((t) => t.status === "done");
     }
 
     // 排序
@@ -244,6 +260,15 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
         (payload) => {
           const deletedId = (payload.old as { id: string }).id;
           setTasks((prev) => prev.filter((t) => t.id !== deletedId));
+          // 被删除的任务从选中集合中移除
+          setSelectedIds((prev) => {
+            if (prev.has(deletedId)) {
+              const next = new Set(prev);
+              next.delete(deletedId);
+              return next;
+            }
+            return prev;
+          });
         },
       )
       .subscribe();
@@ -307,7 +332,7 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
       setTasks((currentTasks) =>
         currentTasks.map((currentTask) =>
           currentTask.id === task.id
-            ? { ...currentTask, is_done: !currentTask.is_done }
+            ? { ...currentTask, status: currentTask.status === "done" ? "todo" : "done" }
             : currentTask,
         ),
       );
@@ -328,13 +353,78 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
     }
   }
 
+  /** 选择/取消选择单个任务 */
+  const selectTask = (taskId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(taskId);
+      } else {
+        next.delete(taskId);
+      }
+      return next;
+    });
+  };
+
+  /** 全选/取消全选（基于当前筛选结果） */
+  const selectAll = (checked: boolean) => {
+    setSelectedIds(checked ? new Set(filteredTasks.map((t) => t.id)) : new Set());
+  };
+
+  /** 清空选择 */
+  const clearSelection = () => setSelectedIds(new Set());
+
+  /** 批量删除（乐观更新） */
+  async function batchDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setTasks((prev) => prev.filter((t) => !selectedIds.has(t.id)));
+    clearSelection();
+    try {
+      await removeTasksBatch(ids);
+      message.showSuccess(`已删除 ${ids.length} 条任务`);
+    } catch (error) {
+      message.showError(getErrorMessage(error, "批量删除失败。"));
+      await reloadTasks();
+    }
+  }
+
+  /** 批量更新状态（乐观更新） */
+  async function batchSetStatus(status: Task["status"]) {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setTasks((prev) =>
+      prev.map((t) => (selectedIds.has(t.id) ? { ...t, status } : t)),
+    );
+    clearSelection();
+    try {
+      await updateTaskStatusBatch(ids, status);
+      message.showSuccess(`已更新 ${ids.length} 条任务`);
+    } catch (error) {
+      message.showError(getErrorMessage(error, "批量更新失败。"));
+      await reloadTasks();
+    }
+  }
+
+  /** 更新筛选状态（同时清空选择） */
+  const updateFilterStatus = (status: typeof filterStatus) => {
+    setFilterStatus(status);
+    setSelectedIds(new Set());
+  };
+
+  /** 更新排序方式（同时清空选择） */
+  const updateSortBy = (sort: typeof sortBy) => {
+    setSortBy(sort);
+    setSelectedIds(new Set());
+  };
+
   /** 看板拖拽后更新任务状态 */
   async function handleKanbanDrop(taskId: string, newStatus: Task["status"]) {
     // 乐观更新：先改本地状态
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskId
-          ? { ...t, status: newStatus, is_done: newStatus === "done" }
+          ? { ...t, status: newStatus }
           : t,
       ),
     );
@@ -353,9 +443,9 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
     setTaskForm,
     isTaskLoading,
     filterStatus,
-    setFilterStatus,
+    setFilterStatus: updateFilterStatus,
     sortBy,
-    setSortBy,
+    setSortBy: updateSortBy,
     viewMode,
     setViewMode,
     filteredTasks,
@@ -367,5 +457,11 @@ export function useTasks({ user, message }: UseTasksOptions): UseTasksHandle {
     reloadTasks,
     handleKanbanDrop,
     taskErrors,
+    selectedIds,
+    selectTask,
+    selectAll,
+    clearSelection,
+    batchDelete,
+    batchSetStatus,
   };
 }

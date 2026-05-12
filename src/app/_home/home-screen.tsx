@@ -12,6 +12,7 @@ import { TaskBoard } from "@/app/_home/_components/task-board";
 import { TaskComposer } from "@/app/_home/_components/task-composer";
 import { TaskEditor } from "@/app/_home/_components/task-editor";
 import { TaskKanban } from "@/app/_home/_components/task-kanban";
+import { BatchToolbar } from "@/app/_home/_components/batch-toolbar";
 import { useHomeScreen } from "@/app/_home/use-home-screen";
 import { AuthCard } from "@/components/auth/auth-card";
 import { CommandPanel } from "@/components/common/command-panel";
@@ -169,6 +170,9 @@ export function HomeScreen() {
                     onToggle={(task) => void workspace.toggleTask(task)}
                     sortBy={workspace.sortBy}
                     tasks={workspace.filteredTasks}
+                    selectedIds={workspace.selectedIds}
+                    selectTask={workspace.selectTask}
+                    selectAll={workspace.selectAll}
                   />
                 ) : (
                   <TaskKanban
@@ -176,6 +180,8 @@ export function HomeScreen() {
                     onDrop={(taskId, newStatus) => void workspace.handleKanbanDrop(taskId, newStatus)}
                     onEdit={(task) => workspace.openEditor(task)}
                     tasks={workspace.filteredTasks}
+                    selectedIds={workspace.selectedIds}
+                    selectTask={workspace.selectTask}
                   />
                 )}
               </motion.div>
@@ -204,6 +210,15 @@ export function HomeScreen() {
                 task={workspace.editingTask}
               />
             ) : null}
+
+            {/* 批量操作浮动工具栏 */}
+            <BatchToolbar
+              selectedCount={workspace.selectedIds.size}
+              onDelete={() => void workspace.batchDelete()}
+              onMarkDone={() => void workspace.batchSetStatus("done")}
+              onMarkTodo={() => void workspace.batchSetStatus("todo")}
+              onClear={workspace.clearSelection}
+            />
           </section>
         )}
       </div>

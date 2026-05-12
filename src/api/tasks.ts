@@ -20,7 +20,6 @@ export async function updateTaskStatusById(
     .from("tasks")
     .update({
       status,
-      is_done: status === "done",
       updated_at: new Date().toISOString(),
     })
     .eq("id", taskId);
@@ -33,19 +32,23 @@ export async function updateTaskStatusById(
 /**
  * 获取当前登录用户的所有任务
  * 按创建时间倒序排列（最新的排在最前面）
+ * @param options - 可选分页参数（limit/offset），不传则加载全部
  * @returns 任务数组
  */
-export async function fetchTasks() {
+export async function fetchTasks(options?: { limit?: number; offset?: number }) {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("tasks")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw error;
+  if (options?.limit) {
+    const offset = options.offset ?? 0;
+    query = query.range(offset, offset + options.limit - 1);
   }
 
+  const { data, error } = await query;
+  if (error) throw error;
   return data ?? [];
 }
 
@@ -82,7 +85,6 @@ export async function updateTaskStatus(task: Task) {
   const { error } = await supabase
     .from("tasks")
     .update({
-      is_done: nextStatus === "done",
       status: nextStatus,
       updated_at: new Date().toISOString(),
     })
@@ -111,7 +113,6 @@ export async function updateTask(
   if (input.dueDate !== undefined) updateData.due_date = input.dueDate || null;
   if (input.status !== undefined) {
     updateData.status = input.status;
-    updateData.is_done = input.status === "done";
   }
 
   const { error } = await supabase
@@ -135,4 +136,36 @@ export async function removeTask(taskId: string) {
   if (error) {
     throw error;
   }
+}
+
+/**
+ * 批量删除任务
+ * @param taskIds - 需要删除的任务 UUID 数组
+ */
+export async function removeTasksBatch(taskIds: string[]) {
+  if (taskIds.length === 0) return;
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("tasks")
+    .delete()
+    .in("id", taskIds);
+  if (error) throw error;
+}
+
+/**
+ * 批量更新任务状态
+ * @param taskIds - 需要更新的任务 UUID 数组
+ * @param newStatus - 目标状态
+ */
+export async function updateTaskStatusBatch(
+  taskIds: string[],
+  newStatus: "todo" | "in_progress" | "done",
+) {
+  if (taskIds.length === 0) return;
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .in("id", taskIds);
+  if (error) throw error;
 }

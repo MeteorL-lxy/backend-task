@@ -9,7 +9,6 @@ export type Task = {
   user_id: string;     // 所属用户（外键关联 auth.users）
   title: string;       // 任务标题
   description: string | null;  // 任务描述
-  is_done: boolean;    // 是否已完成（向后兼容）
   status: "todo" | "in_progress" | "done"; // 看板状态：待办/进行中/已完成
   due_date: string | null;     // 截止日期（ISO 日期字符串）
   created_at: string;  // 创建时间
@@ -41,7 +40,6 @@ export type Database = {
           user_id: string;
           title: string;
           description?: string | null;
-          is_done?: boolean;
           status?: "todo" | "in_progress" | "done";
           due_date?: string | null;
           created_at?: string;
@@ -50,7 +48,6 @@ export type Database = {
         Update: {
           title?: string;
           description?: string | null;
-          is_done?: boolean;
           status?: "todo" | "in_progress" | "done";
           due_date?: string | null;
           updated_at?: string;

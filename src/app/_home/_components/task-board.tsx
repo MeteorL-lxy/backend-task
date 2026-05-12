@@ -3,7 +3,9 @@
  * 展示当前用户的所有任务，支持切换状态、编辑和删除
  */
 
+import { useRef } from "react";
 import { motion } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Task } from "@/types/database";
 import { TASK_STATUS_META } from "@/types/workspace";
 import { emptyStateVariants } from "@/lib/animations";
@@ -20,6 +22,9 @@ type TaskBoardProps = {
   onFilterChange: (status: "all" | "active" | "completed") => void; // 筛选变更
   sortBy: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc"; // 当前排序
   onSortChange: (sort: "createdAtDesc" | "createdAtAsc" | "dueDateAsc" | "dueDateDesc") => void; // 排序变更
+  selectedIds: Set<string>;    // 当前选中的任务 ID 集合
+  selectTask: (taskId: string, checked: boolean) => void; // 选择/取消选择单个任务
+  selectAll: (checked: boolean) => void; // 全选/取消全选
 };
 
 /**
@@ -38,7 +43,19 @@ export function TaskBoard({
   onFilterChange,
   sortBy,
   onSortChange,
+  selectedIds,
+  selectTask,
+  selectAll,
 }: TaskBoardProps) {
+  // 虚拟滚动：可滚动容器引用
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: tasks.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 150,
+    overscan: 3,
+  });
+
   return (
     <div className="rounded-[30px] border border-border bg-surface-raised p-6 shadow-[0_26px_80px_-54px_rgba(28,45,36,0.32)] dark:shadow-[0_26px_80px_-54px_rgba(0,0,0,0.5)]">
       <div className="mb-6 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -52,6 +69,17 @@ export function TaskBoard({
           <p className="mt-2 text-sm text-text-muted">
             {completedCount}/{tasks.length} 已完成
           </p>
+          {/* 全选 checkbox */}
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={tasks.length > 0 && selectedIds.size === tasks.length}
+              onChange={(e) => selectAll(e.target.checked)}
+              className="h-4 w-4 shrink-0 cursor-pointer rounded accent-accent"
+              title="全选"
+            />
+            <span className="text-xs text-text-muted">全选</span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* 状态筛选 */}
@@ -152,77 +180,112 @@ export function TaskBoard({
         </motion.div>
       ) : null}
 
-      {/* 任务卡片列表 */}
-      <div className="grid gap-4" key={`${filterStatus}-${sortBy}`}>
-        {tasks.map((task, index) => (
-          <motion.article
-            className="rounded-[24px] border border-border bg-surface-raised p-5 hover:border-border"
-            key={task.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.3,
-              ease: [0.16, 1, 0.3, 1],
-              delay: Math.min(index * 0.04, 0.4),
-            }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <button
-                className="flex-1 text-left"
-                onClick={() => onToggle(task)}
-                type="button"
+      {/* 任务卡片列表（虚拟滚动） */}
+      <div
+        key={`${filterStatus}-${sortBy}`}
+        ref={parentRef}
+        className="max-h-[calc(100vh-320px)] overflow-y-auto scrollbar-thin"
+      >
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualRow) => {
+            const task = tasks[virtualRow.index];
+            return (
+              <div
+                key={task.id}
+                ref={virtualizer.measureElement}
+                data-index={virtualRow.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                  paddingBottom: 16,
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`h-3 w-3 rounded-full ${
-                      TASK_STATUS_META[task.status].dotClass
-                    }`}
-                  />
-                  <h3
-                    className={`text-lg font-medium ${
-                      task.is_done ? "text-text-muted line-through" : "text-text-primary"
-                    }`}
-                  >
-                    {task.title}
-                  </h3>
-                </div>
-                {task.description ? (
-                  <p className="mt-3 text-sm leading-6 text-text-secondary">
-                    {task.description}
-                  </p>
-                ) : null}
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
-                  <span
-                    className={`rounded-full px-3 py-1 ${TASK_STATUS_META[task.status].colorClass}`}
-                  >
-                    {TASK_STATUS_META[task.status].label}
-                  </span>
-                  {task.due_date ? (
-                    <span className="whitespace-nowrap rounded-full px-3 py-1 due-date-tag">
-                      截止 {task.due_date}
-                    </span>
-                  ) : null}
-                </div>
-              </button>
-              <div className="flex flex-col gap-2">
-                <button
-                  className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-raised"
-                  onClick={() => onEdit(task)}
-                  type="button"
+                <motion.article
+                  className="rounded-[24px] border border-border bg-surface-raised p-5 hover:border-border"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  编辑
-                </button>
-                <button
-                  className="rounded-full border border-red-900/10 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-500/10 dark:border-red-400/20 dark:text-red-400"
-                  onClick={() => onDelete(task.id)}
-                  type="button"
-                >
-                  删除
-                </button>
+                  <div className="flex items-start justify-between gap-4">
+                    {/* 选择 checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(task.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        selectTask(task.id, e.target.checked);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded accent-accent"
+                    />
+                    <button
+                      className="flex-1 text-left"
+                      onClick={() => onToggle(task)}
+                      type="button"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`h-3 w-3 rounded-full ${
+                            TASK_STATUS_META[task.status].dotClass
+                          }`}
+                        />
+                        <h3
+                          className={`text-lg font-medium ${
+                            task.status === "done" ? "text-text-muted line-through" : "text-text-primary"
+                          }`}
+                        >
+                          {task.title}
+                        </h3>
+                      </div>
+                      {task.description ? (
+                        <p className="mt-3 text-sm leading-6 text-text-secondary">
+                          {task.description}
+                        </p>
+                      ) : null}
+                      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
+                        <span
+                          className={`rounded-full px-3 py-1 ${TASK_STATUS_META[task.status].colorClass}`}
+                        >
+                          {TASK_STATUS_META[task.status].label}
+                        </span>
+                        {task.due_date ? (
+                          <span className="whitespace-nowrap rounded-full px-3 py-1 due-date-tag">
+                            截止 {task.due_date}
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-raised"
+                        onClick={() => onEdit(task)}
+                        type="button"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        className="rounded-full border border-red-900/10 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-500/10 dark:border-red-400/20 dark:text-red-400"
+                        onClick={() => onDelete(task.id)}
+                        type="button"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </div>
+                </motion.article>
               </div>
-            </div>
-          </motion.article>
-        ))}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
